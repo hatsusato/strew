@@ -66,5 +66,12 @@ rewrite() {
   ARGS=("${TMP[@]}")
   TMP=()
 }
+run() {
+  while scan-match; do
+    rewrite
+  done
+  echo "${ARGS[@]}"
+}
 
 init "$@"
+run
