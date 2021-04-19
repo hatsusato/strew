@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -eu
+set -efu
 
 RULES=
 ARGS=
@@ -34,30 +34,23 @@ init() {
   INDEX=0
 }
 load-rule() {
-  local ifs=$IFS
-  set -f
+  local r=() x var=MATCH ifs=$IFS
   IFS=$'\t'
-  TMP=(${RULES[$INDEX]})
+  r=(${RULES[$INDEX]})
   IFS=$ifs
-}
-load-match-subst() {
-  local x state=before
-  load-rule
   MATCH=()
   SUBST=()
-  for x in "${TMP[@]}"; do
+  for x in "${r[@]}"; do
     if [[ "$x" == '$' ]]; then
-      state=after
-    elif [[ "$state" == before ]]; then
-      MATCH+=("$x")
-    elif [[ "$state" == after ]]; then
-      SUBST+=("$x")
+      var=SUBST
+    else
+      eval "$var"'+=("$x")'
     fi
   done
-  TMP=()
 }
 pattern-match() {
-  local i=0
+  local i
+  load-rule
   for ((i=0; i<${#MATCH[@]}; i++)); do
     ((i < ${#ARGS[@]})) || return
     [[ "${ARGS[$i]}" == ${MATCH[$i]} ]] || return
@@ -66,7 +59,6 @@ pattern-match() {
 scan-match() {
   local i
   for ((INDEX=0; INDEX<${#RULES[@]}; INDEX++)); do
-    load-match-subst
     pattern-match && return
   done
   return 1
@@ -93,8 +85,7 @@ debug() {
   tmp=("${TMP[@]}")
   a=(args:$INDEX: "${ARGS[@]}" '$' "${TMP[@]}")
   load-rule
-  r=(rule:$INDEX: "${TMP[@]}")
-  TMP=()
+  r=(rule:$INDEX: "${MATCH[@]}" '$' "${SUBST[@]}")
   IFS=$'\t'
   echo "${r[*]}" >&2
   echo "${a[*]}" >&2
