@@ -8,10 +8,13 @@ MATCH=()
 SUBST=()
 TMP=()
 INDEX=0
+DEBUG=
 
 usage() {
   cat <<EOF
-USAGE: $0 <program> [args ...]
+USAGE: $0 [-x] <program> [args ...]
+
+    -x  debug mode
 EOF
   exit
 }
@@ -76,16 +79,36 @@ rewrite() {
     subst
     a+=("$TMP")
   done
-  ARGS=("${a[@]}")
-  TMP=
+  TMP=("${a[@]}")
+}
+debug() {
+  test -z "$DEBUG" && return
+  local a=() r=() tmp=() ifs=$IFS
+  tmp=("${TMP[@]}")
+  a=(args:$INDEX: "${ARGS[@]}" '$' "${TMP[@]}")
+  load-rule
+  r=(rule:$INDEX: "${TMP[@]}")
+  TMP=()
+  IFS=$'\t'
+  echo "${r[*]}" >&2
+  echo "${a[*]}" >&2
+  IFS=$ifs
+  TMP=("${tmp[@]}")
 }
 run() {
+  local a=()
   while scan-match; do
     rewrite
+    debug
+    ARGS=("${TMP[@]}")
   done
   echo "${ARGS[@]}"
 }
 
 (($#)) || usage
+case "$1" in
+  -x) DEBUG=on; shift;;
+  -*) usage;;
+esac
 init "$@"
 run
