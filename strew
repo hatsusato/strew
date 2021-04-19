@@ -4,6 +4,7 @@ set -eu
 
 RULES=()
 ARGS=()
+TMP=()
 
 init() {
   local line
@@ -13,6 +14,13 @@ init() {
   done <"$1"
   shift
   ARGS=("$@")
+}
+load-rule() {
+  local ifs=$IFS
+  set -f
+  IFS=$'\t'
+  TMP=(${RULES[$1]})
+  IFS=$ifs
 }
 
 init "$@"
