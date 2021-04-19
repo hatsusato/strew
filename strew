@@ -57,5 +57,14 @@ scan-match() {
   done
   return 1
 }
+rewrite() {
+  local s
+  TMP=()
+  for s in "${SUBST[@]}"; do
+    TMP+=("$s")
+  done
+  ARGS=("${TMP[@]}")
+  TMP=()
+}
 
 init "$@"
