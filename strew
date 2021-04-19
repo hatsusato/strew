@@ -39,5 +39,13 @@ split-rule() {
     fi
   done
 }
+pattern-match() {
+  local i=0 m
+  for m in "${MATCH[@]}"; do
+    ((i < ${#ARGS[@]})) || return
+    [[ "${ARGS[$i]}" == $m ]] || return
+    ((i++))
+  done
+}
 
 init "$@"
