@@ -4,6 +4,8 @@ set -eu
 
 RULES=()
 ARGS=()
+MATCH=()
+SUBST=()
 TMP=()
 
 init() {
@@ -21,6 +23,21 @@ load-rule() {
   IFS=$'\t'
   TMP=(${RULES[$1]})
   IFS=$ifs
+}
+split-rule() {
+  local x state=before
+  load-rule $1
+  MATCH=()
+  SUBST=()
+  for x in "${TMP[@]}"; do
+    if [[ "$x" == '$' ]]; then
+      state=after
+    elif [[ "$state" == before ]]; then
+      MATCH+=("$x")
+    elif [[ "$state" == after ]]; then
+      SUBST+=("$x")
+    fi
+  done
 }
 
 init "$@"
