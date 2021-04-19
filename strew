@@ -9,6 +9,12 @@ SUBST=()
 TMP=()
 INDEX=0
 
+usage() {
+  cat <<EOF
+USAGE: $0 <program> [args ...]
+EOF
+  exit
+}
 init() {
   local line
   RULES=()
@@ -80,5 +86,6 @@ run() {
   echo "${ARGS[@]}"
 }
 
+(($#)) || usage
 init "$@"
 run
