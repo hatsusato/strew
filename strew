@@ -2,12 +2,12 @@
 
 set -eu
 
-RULES=()
-ARGS=()
-MATCH=()
-SUBST=()
-TMP=()
-INDEX=0
+RULES=
+ARGS=
+INDEX=
+MATCH=
+SUBST=
+TMP=
 DEBUG=
 
 usage() {
@@ -20,12 +20,18 @@ EOF
 }
 init() {
   local line
+  (($#)) || usage
+  case "$1" in
+    -x) DEBUG=on; shift;;
+    -*) usage;;
+  esac
   RULES=()
   while read -r line; do
     RULES+=("$line")
   done <"$1"
   shift
-  ARGS=("$@")
+  ARGS=('$$' "$@")
+  INDEX=0
 }
 load-rule() {
   local ifs=$IFS
@@ -105,10 +111,5 @@ run() {
   echo "${ARGS[@]}"
 }
 
-(($#)) || usage
-case "$1" in
-  -x) DEBUG=on; shift;;
-  -*) usage;;
-esac
 init "$@"
 run
