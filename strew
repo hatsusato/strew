@@ -49,5 +49,13 @@ pattern-match() {
     ((i++))
   done
 }
+scan-match() {
+  local i
+  for ((INDEX=0; INDEX<${#RULES[@]}; INDEX++)); do
+    load-match-subst
+    pattern-match && return
+  done
+  return 1
+}
 
 init "$@"
