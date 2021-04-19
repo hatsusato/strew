@@ -7,6 +7,7 @@ ARGS=()
 MATCH=()
 SUBST=()
 TMP=()
+INDEX=0
 
 init() {
   local line
@@ -21,12 +22,12 @@ load-rule() {
   local ifs=$IFS
   set -f
   IFS=$'\t'
-  TMP=(${RULES[$1]})
+  TMP=(${RULES[$INDEX]})
   IFS=$ifs
 }
-split-rule() {
+load-match-subst() {
   local x state=before
-  load-rule $1
+  load-rule
   MATCH=()
   SUBST=()
   for x in "${TMP[@]}"; do
@@ -38,6 +39,7 @@ split-rule() {
       SUBST+=("$x")
     fi
   done
+  TMP=()
 }
 pattern-match() {
   local i=0 m
