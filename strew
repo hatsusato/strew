@@ -65,13 +65,13 @@ subst() {
   done
 }
 rewrite() {
-  local s
-  TMP=()
-  for s in "${SUBST[@]}"; do
-    TMP+=("$s")
+  local a=()
+  for TMP in "${SUBST[@]}"; do
+    subst
+    a+=("$TMP")
   done
-  ARGS=("${TMP[@]}")
-  TMP=()
+  ARGS=("${a[@]}")
+  TMP=
 }
 run() {
   while scan-match; do
