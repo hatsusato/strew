@@ -21,6 +21,12 @@ error() {
   echo "ERROR: $msg" >&2
   exit 1
 }
+escape-match() {
+  local opts=() d='\$' b='\\'
+  opts+=(-e s"/$d/$b$d/"g)
+  opts+=(-e s"/$b$/$b$b/"g)
+  sed "${opts[@]}"
+}
 init-rule() {
   local i line msg prev= n=$'\n'
   COUNT=0
@@ -52,8 +58,7 @@ init() {
   esac
   init-rule <"$1"
   shift
-  ARGS=('$$' "$@")
-  INDEX=0
+  ARGS=('$' "$@")
 }
 load-rule() {
   local match=MATCH_$INDEX
@@ -65,11 +70,12 @@ load-rule() {
   IFS=$ifs
 }
 pattern-match() {
-  local i
+  local i match
   load-rule
   for ((i=0; i<${#MATCH[@]}; i++)); do
     ((i < ${#ARGS[@]})) || return
-    [[ "${ARGS[$i]}" == ${MATCH[$i]} ]] || return
+    match=$(escape-match <<<"${MATCH[$i]}")
+    [[ "${ARGS[$i]}" =~ ^$match$ ]] || return
   done
 }
 scan-match() {
