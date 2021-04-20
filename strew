@@ -92,17 +92,13 @@ rewrite() {
   done
 }
 debug() {
+  local prefix ifs=$IFS
   test -z "${DEBUG-}" && return
-  local a=() r=() ifs=$IFS
-  a=(args:$INDEX: "${ARGS[@]}" '$' "${UPDATE[@]}")
-  r=(rule:$INDEX: "${MATCH[@]}" '$' "${SUBST[@]}")
   IFS=$'\t'
-  echo "${r[*]}" >&2
-  echo "${a[*]}" >&2
+  echo " -> ${ARGS[*]}"
   IFS=$ifs
 }
 run() {
-  local a=()
   while scan-match; do
     rewrite
     debug
