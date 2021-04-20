@@ -4,9 +4,9 @@ set -efu
 
 usage() {
   cat <<EOF
-USAGE: $0 [-x] <program> [args ...]
+USAGE: $0 [-v] <program> [args ...]
 
-    -x  debug mode
+    -v  debug mode
 EOF
   exit
 }
@@ -47,7 +47,7 @@ init-rule() {
 init() {
   (($#)) || error usage
   case "$1" in
-    -x) DEBUG=on; shift;;
+    -v) DEBUG=on; shift;;
     -*) error option "$1";;
   esac
   init-rule <"$1"
