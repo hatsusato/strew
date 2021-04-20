@@ -21,20 +21,33 @@ EOF
 error() {
   local msg
   case "$1" in
-    match) msg="missing subst after match";;
-    option) msg="unknown option";;
+    eof) msg='no newline at end of file';;
+    match) msg="missing subst after match: $2";;
+    option) msg="unknown option: $2";;
     *) usage;;
   esac
-  echo "ERROR: $msg: $2" >&2
+  echo "ERROR: $msg" >&2
   exit 1
 }
 init-rule() {
-  local match subst sep=$'\t$\t'
+  local l line msg prev= n=$'\n' sep=$'\t$\t'
   RULES=()
-  while read -r match; do
-    test "$match" || continue
-    read -r subst || error match "$match"
-    RULES+=("$match$sep$subst")
+  for ((l=1; ; l++)); do
+    if ! read -r line; then
+      test "$line" && error eof
+      test "$prev" && error match "$msg"
+      break
+    fi
+    if ! test "$prev"; then
+      if test "$line"; then
+        prev=$line
+        msg="${n}line:$l: $line"
+      fi
+    else
+      test "$line" || error match "$msg"
+      RULES+=("$prev$sep$line")
+      prev=
+    fi
   done
 }
 init() {
