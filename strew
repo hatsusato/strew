@@ -2,13 +2,6 @@
 
 set -efu
 
-ARGS=
-INDEX=
-MATCH=
-SUBST=
-UPDATE=
-DEBUG=
-
 usage() {
   cat <<EOF
 USAGE: $0 [-x] <program> [args ...]
@@ -99,7 +92,7 @@ rewrite() {
   done
 }
 debug() {
-  test -z "$DEBUG" && return
+  test -z "${DEBUG-}" && return
   local a=() r=() ifs=$IFS
   a=(args:$INDEX: "${ARGS[@]}" '$' "${UPDATE[@]}")
   r=(rule:$INDEX: "${MATCH[@]}" '$' "${SUBST[@]}")
