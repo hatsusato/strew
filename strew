@@ -18,20 +18,30 @@ USAGE: $0 [-x] <program> [args ...]
 EOF
   exit
 }
+error() {
+  local msg
+  case "$1" in
+    match) msg="missing subst after match";;
+    option) msg="unknown option";;
+    *) usage;;
+  esac
+  echo "ERROR: $msg: $2" >&2
+  exit 1
+}
 init-rule() {
   local match subst sep=$'\t$\t'
   RULES=()
   while read -r match; do
     test "$match" || continue
-    read -r subst
+    read -r subst || error match "$match"
     RULES+=("$match$sep$subst")
   done
 }
 init() {
-  (($#)) || usage
+  (($#)) || error usage
   case "$1" in
     -x) DEBUG=on; shift;;
-    -*) usage;;
+    -*) error option "$1";;
   esac
   init-rule <"$1"
   shift
