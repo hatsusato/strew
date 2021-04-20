@@ -30,7 +30,7 @@ error() {
   exit 1
 }
 init-rule() {
-  local l line msg prev= n=$'\n' sep=$'\t$\t'
+  local i=0 l line msg prev= n=$'\n' sep=$'\t$\t'
   RULES=()
   for ((l=1; ; l++)); do
     if ! read -r line; then
@@ -46,6 +46,9 @@ init-rule() {
     else
       test "$line" || error match "$msg"
       RULES+=("$prev$sep$line")
+      eval MATCH_$i='$prev'
+      eval SUBST_$i='$line'
+      ((i+=1))
       prev=
     fi
   done
@@ -62,19 +65,13 @@ init() {
   INDEX=0
 }
 load-rule() {
-  local r=() x var=MATCH ifs=$IFS
+  local match=MATCH_$INDEX
+  local subst=SUBST_$INDEX
+  local ifs=$IFS
   IFS=$'\t'
-  r=(${RULES[$INDEX]})
+  MATCH=(${!match})
+  SUBST=(${!subst})
   IFS=$ifs
-  MATCH=()
-  SUBST=()
-  for x in "${r[@]}"; do
-    if [[ "$x" == '$' ]]; then
-      var=SUBST
-    else
-      eval "$var"'+=("$x")'
-    fi
-  done
 }
 pattern-match() {
   local i
