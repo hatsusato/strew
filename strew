@@ -18,17 +18,22 @@ USAGE: $0 [-x] <program> [args ...]
 EOF
   exit
 }
+init-rule() {
+  local match subst sep=$'\t$\t'
+  RULES=()
+  while read -r match; do
+    test "$match" || continue
+    read -r subst
+    RULES+=("$match$sep$subst")
+  done
+}
 init() {
-  local line
   (($#)) || usage
   case "$1" in
     -x) DEBUG=on; shift;;
     -*) usage;;
   esac
-  RULES=()
-  while read -r line; do
-    RULES+=("$line")
-  done <"$1"
+  init-rule <"$1"
   shift
   ARGS=('$$' "$@")
   INDEX=0
