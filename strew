@@ -70,17 +70,19 @@ load-rule() {
   IFS=$ifs
 }
 pattern-match() {
-  local i match
-  load-rule
-  for ((i=0; i<${#MATCH[@]}; i++)); do
-    ((i < ${#ARGS[@]})) || return
-    match=$(escape-match <<<"${MATCH[$i]}")
-    [[ "${ARGS[$i]}" =~ ^$match$ ]] || return
+  local match
+  set -- "${ARGS[@]}"
+  for match in "${MATCH[@]}"; do
+    (($#)) || return
+    match=$(escape-match <<<"$match")
+    [[ "$1" =~ ^$match$ ]] || return
+    shift
   done
 }
 scan-match() {
   local i
   for ((INDEX=0; INDEX<COUNT; INDEX++)); do
+    load-rule
     pattern-match && return
   done
   return 1
