@@ -59,13 +59,6 @@ unescape() {
   local tmp=$(sed -e s"/\({[^{}]*}\)/$BD\1/"g)
   eval echo "$tmp"
 }
-escape-match() {
-  local opts=()
-  opts+=(-e s'/{B}{B}/{BB}/'g)
-  opts+=(-e s"/{D}/{BD}/"g)
-  opts+=(-e s"/{B}$/{BB}/"g)
-  escape | sed "${opts[@]}" | unescape
-}
 read-line() {
   local line err=0 ifs=$IFS
   IFS=
@@ -121,6 +114,13 @@ split-tabs() {
     fi
   done
   eval "$2=(${arr[@]@Q})"
+}
+escape-match() {
+  local opts=()
+  opts+=(-e s'/{B}{B}/{BB}/'g)
+  opts+=(-e s"/{D}/{BD}/"g)
+  opts+=(-e s"/{B}$/{BB}/"g)
+  escape | sed "${opts[@]}" | unescape
 }
 pattern-match() {
   local match
