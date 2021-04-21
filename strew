@@ -109,14 +109,18 @@ init() {
   shift
   ARGS=('$' "$@")
 }
-load-pattern() {
-  local match=MATCH_$1
-  local subst=SUBST_$1
-  local ifs=$IFS
-  IFS=$'\t'
-  MATCH=(${!match})
-  SUBST=(${!subst})
-  IFS=$ifs
+split-tabs() {
+  local str=${!1} arr=() t=$'\t'
+  while test "$str"; do
+    if [[ "$str" == *$t* ]]; then
+      arr+=("${str%%$t*}")
+      str=${str#*$t}
+    else
+      arr+=("$str")
+      str=
+    fi
+  done
+  eval "$2=(${arr[@]@Q})"
 }
 pattern-match() {
   local match
@@ -131,7 +135,8 @@ pattern-match() {
 scan-match() {
   local i
   for ((i=0; i<COUNT; i++)); do
-    load-pattern "$i"
+    split-tabs MATCH_$i MATCH
+    split-tabs SUBST_$i SUBST
     pattern-match && return
   done
   return 1
