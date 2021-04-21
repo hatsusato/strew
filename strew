@@ -6,23 +6,42 @@ declare -r L='{' R='}' D='$' B='\' S=' ' Q="'" QQ='"'
 declare -r B2=$B BB=$B$B BD=$B$D
 
 usage() {
-  cat <<EOF
+  cat <<EOF >&2
 USAGE: $0 [-v] <program> [args ...]
 
     -v  debug mode
 EOF
-  exit
-}
-error() {
-  local msg
-  case "$1" in
-    eof) msg='no newline at end of file';;
-    match) msg="missing subst after match: $2";;
-    option) msg="unknown option: $2";;
-    *) usage;;
-  esac
-  echo "ERROR: $msg" >&2
   exit 1
+}
+error-eof() {
+  cat <<EOF >&2
+ERROR: no newline at end of file
+EOF
+  exit 1
+}
+error-halt() {
+  local ifs=$IFS
+  IFS=$'\t'
+  local msg=${ARGS[*]}
+  IFS=$ifs
+  cat <<EOF >&2
+ERROR: no transition rule:
+$msg
+EOF
+  exit 1
+}
+error-missing() {
+  cat <<EOF >&2
+ERROR: missing subst after match:
+$2
+EOF
+  exit 1
+}
+error-option() {
+  cat <<EOF >&2
+ERROR: unknown option: $2
+EOF
+  usage
 }
 escape() {
   local opts=()
@@ -48,21 +67,21 @@ escape-match() {
   escape | sed "${opts[@]}" | unescape
 }
 parse-rule() {
-  local i line msg prev= n=$'\n'
+  local i line msg prev=
   COUNT=0
   for ((i=1; ; i++)); do
     if ! read -r line; then
-      test "$line" && error eof
-      test "$prev" && error match "$msg"
+      test "$line" && error-eof
+      test "$prev" && error-missing "$msg"
       break
     fi
     if ! test "$prev"; then
       if test "$line"; then
         prev=$line
-        msg="${n}line:$i: $line"
+        msg="line:$i: $line"
       fi
     else
-      test "$line" || error match "$msg"
+      test "$line" || error-missing "$msg"
       eval MATCH_$COUNT='$prev'
       eval SUBST_$COUNT='$line'
       declare -r MATCH_$COUNT SUBST_$COUNT
@@ -73,10 +92,10 @@ parse-rule() {
   declare -r COUNT
 }
 init() {
-  (($#)) || error usage
+  (($#)) || usage
   case "$1" in
     -v) DEBUG=on; shift;;
-    -*) error option "$1";;
+    -*) error-option "$1";;
   esac
   parse-rule <"$1"
   shift
