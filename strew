@@ -66,11 +66,19 @@ escape-match() {
   opts+=(-e s"/{B}$/{BB}/"g)
   escape | sed "${opts[@]}" | unescape
 }
+read-line() {
+  local line err=0 ifs=$IFS
+  IFS=
+  read -r line || err=$?
+  echo "$line"
+  IFS=$ifs
+  return $err
+}
 parse-rule() {
   local i line msg prev=
   COUNT=0
   for ((i=1; ; i++)); do
-    if ! read -r line; then
+    if ! line=$(read-line); then
       test "$line" && error-eof
       test "$prev" && error-missing "$msg"
       break
