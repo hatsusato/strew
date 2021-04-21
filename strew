@@ -2,7 +2,7 @@
 
 set -efu
 
-declare -r L='{' R='}' D='$' B='\' S=' ' Q="'" QQ='"'
+declare -r LC='{' RC='}' LP='(' RP=')' D='$' B='\' S=' ' Q="'" QQ='"'
 declare -r B2=$B BB=$B$B BD=$B$D
 
 usage() {
@@ -45,9 +45,11 @@ EOF
 }
 escape() {
   local opts=()
-  opts+=(-e s"/$L/{L}/"g)
-  opts+=(-e s"/$R/{R}/"g)
-  opts+=(-e s"/{L${L}R}/{L}/"g)
+  opts+=(-e s"/$LC/{LC}/"g)
+  opts+=(-e s"/$RC/{RC}/"g)
+  opts+=(-e s"/{LC${LC}RC}/{LC}/"g)
+  opts+=(-e s"/$LP/{LP}/"g)
+  opts+=(-e s"/$RP/{RP}/"g)
   opts+=(-e s"/$B$D/{D}/"g)
   opts+=(-e s"/$B$B/{B}/"g)
   opts+=(-e s"/$S/{S}/"g)
