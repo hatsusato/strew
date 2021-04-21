@@ -27,7 +27,7 @@ escape-match() {
   opts+=(-e s"/$b$/$b$b/"g)
   sed "${opts[@]}"
 }
-init-rule() {
+parse-rule() {
   local i line msg prev= n=$'\n'
   COUNT=0
   for ((i=1; ; i++)); do
@@ -56,11 +56,11 @@ init() {
     -v) DEBUG=on; shift;;
     -*) error option "$1";;
   esac
-  init-rule <"$1"
+  parse-rule <"$1"
   shift
   ARGS=('$' "$@")
 }
-load-rule() {
+load-pattern() {
   local match=MATCH_$INDEX
   local subst=SUBST_$INDEX
   local ifs=$IFS
@@ -82,7 +82,7 @@ pattern-match() {
 scan-match() {
   local i
   for ((INDEX=0; INDEX<COUNT; INDEX++)); do
-    load-rule
+    load-pattern
     pattern-match && return
   done
   return 1
