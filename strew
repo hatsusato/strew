@@ -3,7 +3,7 @@
 set -efu
 
 declare -r L='{' R='}' D='$' B='\' S=' ' Q="'" QQ='"'
-declare -r BB=$B$B BD=$B$D
+declare -r B2=$B BB=$B$B BD=$B$D
 
 usage() {
   cat <<EOF
@@ -48,13 +48,11 @@ escape-match() {
   escape | sed "${opts[@]}" | unescape
 }
 escape-subst() {
-  local opts=() d='\$' b='\\' s=' ' q="'" qq='"'
-  opts+=(-e s"/$d/$b$d/"g)
-  opts+=(-e s"/$b$d\([0-9]\)/$d{arg\1}/"g)
-  opts+=(-e s"/$s/$d{s}/"g)
-  opts+=(-e s"/$q/$d{q}/"g)
-  opts+=(-e s"/$qq/$d{qq}/"g)
-  sed "${opts[@]}"
+  local opts=()
+  opts+=(-e s'/{B}{B}/{B2}/'g)
+  opts+=(-e s"/{B}{D}/{BD}/"g)
+  opts+=(-e s"/{D}\([0-9]\)/{arg\1}/"g)
+  escape | sed "${opts[@]}" | unescape
 }
 parse-rule() {
   local i line msg prev= n=$'\n'
@@ -126,7 +124,6 @@ rewrite() {
   UPDATE=()
   for subst in "${SUBST[@]}"; do
     subst=$(escape-subst <<<"$subst")
-    eval subst=$subst
     UPDATE+=("$subst")
   done
   UPDATE+=("${ARGS[@]:count}")
