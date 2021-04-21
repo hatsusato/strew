@@ -2,7 +2,6 @@
 
 set -efu
 
-RULES=
 ARGS=
 INDEX=
 MATCH=
@@ -30,9 +29,8 @@ error() {
   exit 1
 }
 init-rule() {
-  local i line msg prev= n=$'\n' sep=$'\t$\t'
+  local i line msg prev= n=$'\n'
   COUNT=0
-  RULES=()
   for ((i=1; ; i++)); do
     if ! read -r line; then
       test "$line" && error eof
@@ -46,7 +44,6 @@ init-rule() {
       fi
     else
       test "$line" || error match "$msg"
-      RULES+=("$prev$sep$line")
       eval MATCH_$COUNT='$prev'
       eval SUBST_$COUNT='$line'
       ((COUNT+=1))
