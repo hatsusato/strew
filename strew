@@ -149,7 +149,18 @@ escape-subst() {
   opts+=(-e s"/{B}{D}/{BD}/"g)
   for ((i=0; i<count; i++)); do
     local arg$i="${ARGS[$i]}"
-    opts+=(-e s"/{D}$i/{arg$i}/"g)
+    local a=arg$i
+    local match=${MATCH[$i]}
+    match=$(escape-match <<<"$match")
+    if [[ "${!a}" =~ ^$match$ ]]; then
+      local r j=0
+      for r in "${BASH_REMATCH[@]:1}"; do
+        local $a$j="$r"
+        opts+=(-e s"/{D}$i$j/{${a}$j}/"g)
+        ((j+=1))
+      done
+    fi
+    opts+=(-e s"/{D}$i/{$a}/"g)
   done
   escape | sed "${opts[@]}" | unescape
 }
