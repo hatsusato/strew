@@ -1,0 +1,2 @@
+# strew
+STRing REWriting language
