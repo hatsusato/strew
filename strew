@@ -142,22 +142,17 @@ scan-match() {
   return 1
 }
 escape-subst() {
-  local arg opts=()
+  local opts=()
   opts+=(-e s'/{B}{B}/{B2}/'g)
   opts+=(-e s"/{B}{D}/{BD}/"g)
-  for arg in "${args[@]}"; do
-    opts+=(-e s"/{D}${arg#arg}/{$arg}/"g)
+  for ((i=0; i<count; i++)); do
+    local arg$i="${ARGS[$i]}"
+    opts+=(-e s"/{D}$i/{arg$i}/"g)
   done
   escape | sed "${opts[@]}" | unescape
 }
 rewrite() {
-  local i args subst
-  local -r count=${#MATCH[@]}
-  for ((i=0; i<count; i++)); do
-    local -r arg$i="${ARGS[$i]}"
-    args+=(arg$i)
-  done
-  declare -r args
+  local subst count=${#MATCH[@]}
   UPDATE=()
   for subst in "${SUBST[@]}"; do
     subst=$(escape-subst <<<"$subst")
