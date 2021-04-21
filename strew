@@ -3,6 +3,7 @@
 set -efu
 
 declare -r L='{' R='}' D='$' B='\' S=' ' Q="'" QQ='"'
+declare -r BB=$B$B BD=$B$D
 
 usage() {
   cat <<EOF
@@ -36,14 +37,15 @@ escape() {
   sed "${opts[@]}"
 }
 unescape() {
-  local tmp=$(sed -e s"/\({[^{}]*}\)/$B$D\1/"g)
+  local tmp=$(sed -e s"/\({[^{}]*}\)/$BD\1/"g)
   eval echo "$tmp"
 }
 escape-match() {
-  local opts=() d='\$' b='\\'
-  opts+=(-e s"/$d/$b$d/"g)
-  opts+=(-e s"/$b$/$b$b/"g)
-  sed "${opts[@]}"
+  local opts=()
+  opts+=(-e s'/{B}{B}/{BB}/'g)
+  opts+=(-e s"/{D}/{BD}/"g)
+  opts+=(-e s"/{B}$/{BB}/"g)
+  escape | sed "${opts[@]}" | unescape
 }
 escape-subst() {
   local opts=() d='\$' b='\\' s=' ' q="'" qq='"'
