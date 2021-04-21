@@ -161,19 +161,20 @@ rewrite() {
   UPDATE+=("${ARGS[@]:count}")
 }
 debug() {
-  local prefix ifs=$IFS
+  local ifs=$IFS
   test -z "${DEBUG-}" && return
   IFS=$'\t'
   echo " -> ${ARGS[*]}"
   IFS=$ifs
 }
 run() {
-  while scan-match; do
+  while test "${ARGS[0]}"; do
+    scan-match || error-halt
     rewrite
     debug
     ARGS=("${UPDATE[@]}")
   done
-  echo "${ARGS[@]}"
+  echo "${ARGS[@]:1}"
 }
 
 init "$@"
