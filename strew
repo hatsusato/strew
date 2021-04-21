@@ -2,6 +2,8 @@
 
 set -efu
 
+declare -r L='{' R='}' D='$' B='\' S=' ' Q="'" QQ='"'
+
 usage() {
   cat <<EOF
 USAGE: $0 [-v] <program> [args ...]
@@ -20,6 +22,22 @@ error() {
   esac
   echo "ERROR: $msg" >&2
   exit 1
+}
+escape() {
+  local opts=()
+  opts+=(-e s"/$L/{L}/"g)
+  opts+=(-e s"/$R/{R}/"g)
+  opts+=(-e s"/{L${L}R}/{L}/"g)
+  opts+=(-e s"/$B$D/{D}/"g)
+  opts+=(-e s"/$B$B/{B}/"g)
+  opts+=(-e s"/$S/{S}/"g)
+  opts+=(-e s"/$Q/{Q}/"g)
+  opts+=(-e s"/$QQ/{QQ}/"g)
+  sed "${opts[@]}"
+}
+unescape() {
+  local tmp=$(sed -e s"/\({[^{}]*}\)/$B$D\1/"g)
+  eval echo "$tmp"
 }
 escape-match() {
   local opts=() d='\$' b='\\'
