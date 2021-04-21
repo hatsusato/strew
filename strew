@@ -27,6 +27,15 @@ escape-match() {
   opts+=(-e s"/$b$/$b$b/"g)
   sed "${opts[@]}"
 }
+escape-subst() {
+  local opts=() d='\$' b='\\' s=' ' q="'" qq='"'
+  opts+=(-e s"/$d/$b$d/"g)
+  opts+=(-e s"/$b$d\([0-9]\)/$d{arg\1}/"g)
+  opts+=(-e s"/$s/$d{s}/"g)
+  opts+=(-e s"/$q/$d{q}/"g)
+  opts+=(-e s"/$qq/$d{qq}/"g)
+  sed "${opts[@]}"
+}
 parse-rule() {
   local i line msg prev= n=$'\n'
   COUNT=0
@@ -88,16 +97,17 @@ scan-match() {
   return 1
 }
 rewrite() {
-  local s a b i=0
-  UPDATE=()
-  for s in "${SUBST[@]}"; do
-    for ((i=0; i<${#ARGS[@]}; i++)); do
-      a=${ARGS[$i]}
-      b='$'$i
-      s=${s//$b/$a}
-    done
-    UPDATE+=("$s")
+  local i count=${#MATCH[@]} subst s=' ' q="'" qq='"'
+  for ((i=0; i<count; i++)); do
+    local arg$i="${ARGS[$i]}"
   done
+  UPDATE=()
+  for subst in "${SUBST[@]}"; do
+    subst=$(escape-subst <<<"$subst")
+    eval subst=$subst
+    UPDATE+=("$subst")
+  done
+  UPDATE+=("${ARGS[@]:count}")
 }
 debug() {
   local prefix ifs=$IFS
