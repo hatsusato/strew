@@ -61,8 +61,8 @@ init() {
   ARGS=('$' "$@")
 }
 load-pattern() {
-  local match=MATCH_$INDEX
-  local subst=SUBST_$INDEX
+  local match=MATCH_$1
+  local subst=SUBST_$1
   local ifs=$IFS
   IFS=$'\t'
   MATCH=(${!match})
@@ -81,8 +81,8 @@ pattern-match() {
 }
 scan-match() {
   local i
-  for ((INDEX=0; INDEX<COUNT; INDEX++)); do
-    load-pattern
+  for ((i=0; i<COUNT; i++)); do
+    load-pattern "$i"
     pattern-match && return
   done
   return 1
