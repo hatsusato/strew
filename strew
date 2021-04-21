@@ -54,10 +54,12 @@ parse-rule() {
       test "$line" || error match "$msg"
       eval MATCH_$COUNT='$prev'
       eval SUBST_$COUNT='$line'
+      declare -r MATCH_$COUNT SUBST_$COUNT
       ((COUNT+=1))
       prev=
     fi
   done
+  declare -r COUNT
 }
 init() {
   (($#)) || error usage
