@@ -49,13 +49,6 @@ ERROR: no newline at end of file
 EOF
   exit 1
 }
-error-halt() {
-  cat <<EOF >&2
-ERROR: no transition rule:
-$(concat ARGS)
-EOF
-  exit 1
-}
 error() {
   local -i err=$?
   local cmd=$1 msg='ERROR: ' n=$'\n'
@@ -64,11 +57,13 @@ error() {
   case $cmd in
     eval) msg+='outbound index in this subst:';;
     file) msg+='file not found:';;
+    halt) msg+='no transition rule:';;
     missing) msg+='missing subst after match:';;
     option) msg+='unknown option:';;
   esac
   case $cmd in
     eval) msg+="$n$(concat SUBST_$INDEX)";;
+    halt) msg+="$n$(concat ARGS)";;
     missing) msg+="$n$@";;
     file|option) msg+=" $@";;
   esac
@@ -242,7 +237,7 @@ debug() {
 run() {
   while test "${ARGS[0]}"; do
     debug
-    scan-match || error-halt
+    scan-match || error halt
     rewrite
   done
   echo "${ARGS[@]:1}"
