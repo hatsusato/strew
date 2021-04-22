@@ -192,11 +192,11 @@ scan-match() {
 rewrite-rematch() {
   local -a opts
   local -i i=0
-  local m
+  local match
   escape-prepare-match opts
-  for m; do
-    m=$(escape opts <<<"$m")
-    [[ "${ARGS[i]}" =~ ^$m$ ]] || :
+  for match in "${match_[@]}"; do
+    match=$(escape opts <<<"$match")
+    [[ "${ARGS[i]}" =~ ^$match$ ]] || :
     local -n rematch_=rematch_$i
     rematch_=("${BASH_REMATCH[@]}")
     ((i++)) || :
@@ -215,17 +215,16 @@ rewrite-prepare-escape() {
 }
 rewrite() {
   local -a opts
-  local match subst
-  split "${MATCH_RULES[INDEX]}" MATCH
-  split "${SUBST_RULES[INDEX]}" SUBST
-  local -i i=0 count=${#MATCH[@]}
+  local -n match_=MATCH_$INDEX subst_=SUBST_$INDEX
+  local -i i=0 count=${#match_[@]}
+  local subst
   for ((i=0; i<count; i++)); do
     local -a rematch_$i
   done
-  rewrite-rematch "${MATCH[@]}"
+  rewrite-rematch
   rewrite-prepare-escape
   UPDATE=()
-  for subst in "${SUBST[@]}"; do
+  for subst in "${subst_[@]}"; do
     subst=$(escape opts <<<"$subst")
     UPDATE+=("$subst")
   done
