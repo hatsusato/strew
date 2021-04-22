@@ -63,12 +63,6 @@ $@
 EOF
   exit 1
 }
-error-option() {
-  cat <<EOF >&2
-ERROR: unknown option: $@
-EOF
-  usage
-}
 error() {
   local -i err=$?
   local cmd=$1 msg='ERROR: ' n=$'\n'
@@ -77,13 +71,17 @@ error() {
   case $cmd in
     eval) msg+='outbound index in this subst:';;
     file) msg+='file not found:';;
+    option) msg+='unknown option:';;
   esac
   case $cmd in
     eval) msg+="$n$(concat SUBST_$INDEX)";;
-    file) msg+=" $@";;
+    file|option) msg+=" $@";;
   esac
   echo "$msg" >&2
-  exit $err
+  case $cmd in
+    option) usage;;
+    *) exit $err;;
+  esac
 }
 
 # escape
@@ -179,7 +177,7 @@ parse-option() {
       -d) DELIM=$2; j=2;;
       -h) usage;;
       -v) DEBUG=on;;
-      -*) error-option "$1";;
+      -*) error option "$1";;
     esac
     shift $j
     ((i+=j)) || :
