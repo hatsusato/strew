@@ -5,6 +5,7 @@ set -efu
 declare -r LC='{' RC='}' LP='(' RP=')' D='$' B='\' S=' ' Q="'" QQ='"'
 declare -r B2=$B BB=$B$B BD=$B$D
 
+# error handling
 usage() {
   cat <<EOF >&2
 USAGE: $0 [-v] <program> [args ...]
@@ -49,6 +50,8 @@ ERROR: not found: $msg
 EOF
   exit 1
 }
+
+# escape
 escape() {
   local opts=()
   opts+=(-e s"/$LC/{LC}/"g)
@@ -67,6 +70,8 @@ unescape() {
   local tmp=$(sed -e s"/\({[^{}]*}\)/$BD\1/"g)
   eval echo "$tmp"
 }
+
+# initialization
 read-line() {
   local ifs=$IFS
   local -i err=0
@@ -119,6 +124,8 @@ init() {
   shift
   ARGS=('$' "$@")
 }
+
+# matching
 split-tabs() {
   local str=${!1} arr=() t=$'\t'
   while test "$str"; do
@@ -158,6 +165,8 @@ scan-match() {
   done
   return 1
 }
+
+# rewriting
 escape-subst() {
   local -a opts
   opts+=(-e s'/{B}{B}/{B2}/'g)
@@ -190,6 +199,8 @@ rewrite() {
   done
   UPDATE+=("${ARGS[@]:count}")
 }
+
+# entry point
 debug() {
   local ifs=$IFS
   test -z "${DEBUG-}" && return
