@@ -45,17 +45,19 @@ EOF
 }
 error() {
   local -i err=$?
-  local cmd=$1 msg='ERROR: ' n=$'\n'
+  local cmd=$1 msg n=$'\n'
   shift
   ((err)) || err=1
+  msg='ERROR: '
   case $cmd in
-    eof) msg+='no newline at end of file:';;
-    eval) msg+='outbound index in this subst:';;
-    file) msg+='file not found:';;
-    halt) msg+='no transition rule:';;
-    missing) msg+='missing subst after match:';;
-    option) msg+='unknown option:';;
+    eof) msg+='no newline at end of file';;
+    eval) msg+='outbound index in this subst';;
+    file) msg+='file not found';;
+    halt) msg+='no transition rule';;
+    missing) msg+='missing subst after match';;
+    option) msg+='unknown option';;
   esac
+  msg+=:
   case $cmd in
     eval) msg+="$n$(concat SUBST_$INDEX)";;
     halt) msg+="$n$(concat ARGS)";;
