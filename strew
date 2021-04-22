@@ -163,27 +163,32 @@ parse-rules() {
   done
   declare -gr COUNT MATCH_RULES SUBST_RULES
 }
-init() {
-  local msg
+parse-option() {
   declare -g DEBUG DELIM=$'\t'
-  declare -ag ARGS
-  (($#)) || usage
+  local -i i=0 j=0
+  local msg
   while [[ "${1-}" == -* ]]; do
+    j=1
     msg=$1
-    shift
-    case "$msg" in
-      -d) DELIM=$1; shift;;
+    case "$1" in
+      -d) DELIM=$2; j=2;;
       -h) usage;;
       -v) DEBUG=on;;
       -*) error-option;;
     esac
+    shift $j
+    ((i+=j)) || :
   done
   (($#)) || usage
-  msg=$1
+  return $i
+}
+init() {
+  parse-option "$@" || shift $?
+  local msg=$1
   test -f "$1" || error-file
   parse-rules <"$1"
   shift
-  ARGS=('$' "$@")
+  declare -ag ARGS=('$' "$@")
 }
 
 # matching
