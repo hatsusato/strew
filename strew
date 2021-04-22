@@ -205,27 +205,30 @@ scan-match() {
 
 # rewriting
 rewrite-rematch() {
-  local -n args_=$1 match_=$2
+  local -n match_=MATCH_$INDEX
   local -a opts
   local -i i=0
   local match
   escape-prepare-match opts
   for match in "${match_[@]}"; do
     match=$(escape opts <<<"$match")
-    [[ "${args_[i]}" =~ ^$match$ ]] || :
+    [[ "${ARGS[i]}" =~ ^$match$ ]] || :
     local -n rematch_=rematch_$((i++))
     rematch_=("${BASH_REMATCH[@]}")
   done
 }
 rewrite-subst() {
-  local -n update_=$1 subst_=$2
-  local -a opts
+  local -n subst_=SUBST_$INDEX
+  local -a opts args
   local subst
   escape-prepare-subst opts rematch_
+  args=()
   for subst in "${subst_[@]}"; do
     subst=$(escape opts <<<"$subst")
-    update_+=("$subst")
+    args+=("$subst")
   done
+  args+=("${ARGS[@]:count}")
+  ARGS=("${args[@]}")
 }
 rewrite() {
   local -n match_=MATCH_$INDEX
@@ -233,10 +236,8 @@ rewrite() {
   for ((i=0; i<count; i++)); do
     local -a rematch_$i
   done
-  rewrite-rematch ARGS MATCH_$INDEX
-  UPDATE=()
-  rewrite-subst UPDATE SUBST_$INDEX
-  UPDATE+=("${ARGS[@]:count}")
+  rewrite-rematch
+  rewrite-subst
 }
 
 # entry point
@@ -249,10 +250,9 @@ debug() {
 }
 run() {
   while test "${ARGS[0]}"; do
+    debug
     scan-match || error-halt
     rewrite
-    debug
-    ARGS=("${UPDATE[@]}")
   done
   echo "${ARGS[@]:1}"
 }
