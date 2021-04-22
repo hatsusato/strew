@@ -233,6 +233,7 @@ debug() {
   fi
 }
 run() {
+  init "$@"
   while test "${ARGS[0]}"; do
     debug
     scan-match || error halt
@@ -241,5 +242,4 @@ run() {
   echo "${ARGS[@]:1}"
 }
 
-init "$@"
-run
+run "$@"
