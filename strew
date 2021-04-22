@@ -66,6 +66,7 @@ escape-preprocess() {
   opts_+=(-e s"/$QQ/{QQ}/"g)
 }
 escape-prepare-match() {
+  local -n opts_=$1
   if test -z "${ESCAPE_MATCH_OPTS+set}"; then
     declare -ag ESCAPE_MATCH_OPTS
     escape-preprocess ESCAPE_MATCH_OPTS
@@ -74,18 +75,20 @@ escape-prepare-match() {
     ESCAPE_MATCH_OPTS+=(-e s"/{B}$D/{BB}/"g)
     declare -gr ESCAPE_MATCH_OPTS
   fi
-  local -n opts_=$1
   opts_=("${ESCAPE_MATCH_OPTS[@]}")
 }
 escape-prepare-subst() {
+  local -n opts_=$1
+  local var=$2
   if test -z "${ESCAPE_SUBST_OPTS+set}"; then
     declare -ag ESCAPE_SUBST_OPTS
     escape-preprocess ESCAPE_SUBST_OPTS
     ESCAPE_SUBST_OPTS+=(-e s'/{B}{B}/{B2}/'g)
     ESCAPE_SUBST_OPTS+=(-e s"/{B}{D}/{BD}/"g)
+    ESCAPE_SUBST_OPTS+=(-e s"/{D}\([0-9]\)\([0-9]\)/{$var\1[\2]}/"g)
+    ESCAPE_SUBST_OPTS+=(-e s"/{D}\([0-9]\)/{$var\1[0]}/"g)
     declare -gr ESCAPE_SUBST_OPTS
   fi
-  local -n opts_=$1
   opts_=("${ESCAPE_SUBST_OPTS[@]}")
 }
 escape() {
@@ -203,28 +206,12 @@ rewrite-rematch() {
     rematch_=("${BASH_REMATCH[@]}")
   done
 }
-rewrite-prepare-escape() {
-  local -n opts_=$1
-  local -i count=$2
-  local rematch_prefix=$3
-  local -i i j
-  for ((i=0; i<count; i++)); do
-    local rematch_name=$rematch_prefix$i
-    local -n rematch_=$rematch_name
-    for ((j=0; j<${#rematch_[@]}; j++)); do
-      opts_+=(-e s"/{D}$i$j/{$rematch_name[$j]}/"g)
-    done
-    opts_+=(-e s"/{D}$i/{$rematch_name[0]}/"g)
-  done
-}
 rewrite-subst() {
   local -n update_=$1 subst_=$2
-  local -i count=$3
-  local rematch_prefix=$4
+  local rematch_prefix=$3
   local -a opts
   local subst
-  escape-prepare-subst opts
-  rewrite-prepare-escape opts $count $rematch_prefix
+  escape-prepare-subst opts $rematch_prefix
   for subst in "${subst_[@]}"; do
     subst=$(escape opts <<<"$subst")
     update_+=("$subst")
@@ -238,7 +225,7 @@ rewrite() {
   done
   rewrite-rematch ARGS MATCH_$INDEX rematch_
   UPDATE=()
-  rewrite-subst UPDATE SUBST_$INDEX $count rematch_
+  rewrite-subst UPDATE SUBST_$INDEX rematch_
   UPDATE+=("${ARGS[@]:count}")
 }
 
