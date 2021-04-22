@@ -218,20 +218,17 @@ scan-match() {
 }
 
 # rewriting
-rewrite-subst() {
+rewrite() {
   local -n subst_=SUBST_$INDEX
-  local -a opts args
+  local -a opts update
   local subst
   escape-prepare-subst opts
+  pattern-match rematch
   for subst in "${subst_[@]}"; do
     subst=$(escape opts <<<"$subst")
-    args+=("$subst")
+    update+=("$subst")
   done
-  ARGS=("${args[@]}" "${REST[@]}")
-}
-rewrite() {
-  pattern-match rematch
-  rewrite-subst
+  ARGS=("${update[@]}" "${REST[@]}")
 }
 
 # entry point
