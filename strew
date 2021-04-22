@@ -43,18 +43,13 @@ USAGE: $0 [-v] [-d DELIM] PROGRAM [args ...]
 EOF
   exit 1
 }
-error-eof() {
-  cat <<EOF >&2
-ERROR: no newline at end of file
-EOF
-  exit 1
-}
 error() {
   local -i err=$?
   local cmd=$1 msg='ERROR: ' n=$'\n'
   shift
   ((err)) || err=1
   case $cmd in
+    eof) msg+='no newline at end of file:';;
     eval) msg+='outbound index in this subst:';;
     file) msg+='file not found:';;
     halt) msg+='no transition rule:';;
@@ -138,7 +133,7 @@ parse-rules() {
   local -i i
   for ((i=1; ; i++)); do
     if ! read-line; then
-      test "$line" && error-eof
+      test "$line" && error eof
       test "$prev" && error missing "$msg"
       break
     elif test "$prev"; then
