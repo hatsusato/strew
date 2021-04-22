@@ -52,23 +52,36 @@ EOF
 }
 
 # escape
-escape() {
-  local -a opts
-  opts+=(-e s"/$LC/{LC}/"g)
-  opts+=(-e s"/$RC/{RC}/"g)
-  opts+=(-e s"/{LC${LC}RC}/{LC}/"g)
-  opts+=(-e s"/$LP/{LP}/"g)
-  opts+=(-e s"/$RP/{RP}/"g)
-  opts+=(-e s"/$BD/{D}/"g)
-  opts+=(-e s"/$BB/{B}/"g)
-  opts+=(-e s"/$S/{S}/"g)
-  opts+=(-e s"/$Q/{Q}/"g)
-  opts+=(-e s"/$QQ/{QQ}/"g)
-  sed "${opts[@]}"
+escape-preprocess() {
+  local -n opts_=$1
+  opts_+=(-e s"/$LC/{LC}/"g)
+  opts_+=(-e s"/$RC/{RC}/"g)
+  opts_+=(-e s"/{LC${LC}RC}/{LC}/"g)
+  opts_+=(-e s"/$LP/{LP}/"g)
+  opts_+=(-e s"/$RP/{RP}/"g)
+  opts_+=(-e s"/$BD/{D}/"g)
+  opts_+=(-e s"/$BB/{B}/"g)
+  opts_+=(-e s"/$S/{S}/"g)
+  opts_+=(-e s"/$Q/{Q}/"g)
+  opts_+=(-e s"/$QQ/{QQ}/"g)
 }
-unescape() {
+escape-init-match() {
+  local -n opts_=$1
+  escape-preprocess $1
+  opts_+=(-e s'/{B}{B}/{BB}/'g)
+  opts_+=(-e s"/{D}/{BD}/"g)
+  opts_+=(-e s"/{B}$D/{BB}/"g)
+}
+escape-init-subst() {
+  local -n opts_=$1
+  escape-preprocess $1
+  opts+=(-e s'/{B}{B}/{B2}/'g)
+  opts+=(-e s"/{B}{D}/{BD}/"g)
+}
+escape() {
   local tmp
-  tmp=$(sed -e s"/\({[^{}]*}\)/$BD\1/"g)
+  local -n opts_=$1
+  tmp=$(sed "${opts_[@]}" -e s"/\({[^{}]*}\)/$BD\1/"g)
   eval echo "$tmp"
 }
 
@@ -125,6 +138,7 @@ parse-rules() {
 init() {
   local msg
   declare -g DEBUG ARGS
+  declare -ag ESCAPE_OPTS_MATCH ESCAPE_OPTS_SUBST
   (($#)) || usage
   while [[ "${1-}" == -* ]]; do
     msg=$1
@@ -141,23 +155,19 @@ init() {
   parse-rules <"$1"
   shift
   ARGS=('$' "$@")
+  escape-init-match ESCAPE_OPTS_MATCH
+  escape-init-subst ESCAPE_OPTS_SUBST
+  declare -gr ESCAPE_OPTS_MATCH ESCAPE_OPTS_SUBST
 }
 
 # matching
-escape-match() {
-  local -a opts
-  opts+=(-e s'/{B}{B}/{BB}/'g)
-  opts+=(-e s"/{D}/{BD}/"g)
-  opts+=(-e s"/{B}$D/{BB}/"g)
-  escape | sed "${opts[@]}" | unescape
-}
 pattern-match() {
   local -n match=MATCH_$INDEX
   local m
   set -- "${ARGS[@]}"
   for m in "${match[@]}"; do
     (($#)) || return
-    m=$(escape-match <<<"$m")
+    m=$(escape ESCAPE_OPTS_MATCH <<<"$m")
     [[ "$1" =~ ^$m$ ]] || return
     shift
   done
@@ -171,36 +181,28 @@ scan-match() {
 }
 
 # rewriting
-escape-subst() {
-  local -a opts
-  local -i i j
-  opts+=(-e s'/{B}{B}/{B2}/'g)
-  opts+=(-e s"/{B}{D}/{BD}/"g)
-  for ((i=0; i<count; i++)); do
-    local -n rematch=rematch_$i
-    for ((j=1; j<${#rematch[@]}; j++)); do
-      opts+=(-e s"/{D}$i$j/{rematch_$i[$j]}/"g)
-    done
-    opts+=(-e s"/{D}$i/{rematch_$i[0]}/"g)
-  done
-  escape | sed "${opts[@]}" | unescape
-}
 rewrite() {
+  local -a opts=("${ESCAPE_OPTS_SUBST[@]}")
   local match subst
   split "${MATCH_RULES[INDEX]}" MATCH
   split "${SUBST_RULES[INDEX]}" SUBST
-  local -i count=0
+  local -i i=0 j=1 count=0
   for match in "${MATCH[@]}"; do
-    match=$(escape-match <<<"$match")
+    match=$(escape ESCAPE_OPTS_MATCH <<<"$match")
     [[ "${ARGS[$count]}" =~ ^$match$ ]] || :
     local -a rematch_$count
     local -n rematch=rematch_$count
     rematch=("${BASH_REMATCH[@]}")
-    ((count+=1))
+    for ((j=1; j<${#rematch[@]}; j++)); do
+      opts+=(-e s"/{D}$i$j/{rematch_$i[$j]}/"g)
+    done
+    opts+=(-e s"/{D}$i/{rematch_$i[0]}/"g)
+    ((count++)) || :
+    ((i++)) || :
   done
   UPDATE=()
   for subst in "${SUBST[@]}"; do
-    subst=$(escape-subst <<<"$subst")
+    subst=$(escape opts <<<"$subst")
     UPDATE+=("$subst")
   done
   UPDATE+=("${ARGS[@]:count}")
