@@ -5,6 +5,15 @@ set -efu
 declare -r LC='{' RC='}' LP='(' RP=')' D='$' B='\' S=' ' Q="'" QQ='"'
 declare -r B2=$B BB=$B$B BD=$B$D
 
+# utility
+concat() {
+  local -n var_=$1
+  local ifs=$IFS
+  IFS=$'\t'
+  echo "${var_[*]}"
+  IFS=$ifs
+}
+
 # error handling
 usage() {
   cat <<EOF >&2
@@ -21,13 +30,9 @@ EOF
   exit 1
 }
 error-halt() {
-  local ifs=$IFS
-  IFS=$'\t'
-  local msg=${ARGS[*]}
-  IFS=$ifs
   cat <<EOF >&2
 ERROR: no transition rule:
-$msg
+$(concat ARGS)
 EOF
   exit 1
 }
@@ -51,14 +56,9 @@ EOF
   exit 1
 }
 error-eval() {
-  local -n subst_=SUBST_$INDEX
-  local ifs=$IFS
-  IFS=$'\t'
-  local msg=${subst_[*]}
-  IFS=$ifs
   cat <<EOF >&2
 ERROR: outbound index in this subst:
-$msg
+$(concat SUBST_$INDEX)
 EOF
   exit $1
 }
@@ -242,11 +242,7 @@ rewrite() {
 
 # entry point
 debug() {
-  local ifs=$IFS
-  test -z "${DEBUG-}" && return
-  IFS=$'\t'
-  echo " -> ${ARGS[*]}"
-  IFS=$ifs
+  test "${DEBUG-}" && echo " -> $(concat ARGS)"
 }
 run() {
   while test "${ARGS[0]}"; do
