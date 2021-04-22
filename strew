@@ -13,6 +13,20 @@ concat() {
   echo "${var_[*]}"
   IFS=$ifs
 }
+split() {
+  local src=$1 t=$'\t'
+  local -n dst_=$2
+  dst_=()
+  while test "$src"; do
+    if [[ "$src" == *$t* ]]; then
+      dst_+=("${src%%$t*}")
+      src=${src#*$t}
+    else
+      dst_+=("$src")
+      src=
+    fi
+  done
+}
 
 # error handling
 usage() {
@@ -118,20 +132,6 @@ read-line() {
   read -r line || err=$?
   IFS=$ifs
   return $err
-}
-split() {
-  local src=$1 t=$'\t'
-  local -n dst_=$2
-  dst_=()
-  while test "$src"; do
-    if [[ "$src" == *$t* ]]; then
-      dst_+=("${src%%$t*}")
-      src=${src#*$t}
-    else
-      dst_+=("$src")
-      src=
-    fi
-  done
 }
 parse-rules() {
   declare -ig COUNT=0
