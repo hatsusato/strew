@@ -7,6 +7,10 @@ declare -r B2=$B BB=$B$B BD=$B$D
 declare -r REMATCH_PREFIX=REMATCH_
 
 # utility
+defined() {
+  local -n var_=$1
+  test "${var_+set}"
+}
 concat() {
   local -n var_=$1
   local ifs=$IFS
@@ -101,7 +105,7 @@ escape-preprocess() {
 }
 escape-prepare-match() {
   local -n opts_=$1
-  if test -z "${ESCAPE_MATCH_OPTS+set}"; then
+  if ! defined ESCAPE_MATCH_OPTS; then
     declare -ag ESCAPE_MATCH_OPTS
     escape-preprocess ESCAPE_MATCH_OPTS
     ESCAPE_MATCH_OPTS+=(-e s'/{B}{B}/{BB}/'g)
@@ -113,7 +117,7 @@ escape-prepare-match() {
 }
 escape-prepare-subst() {
   local -n opts_=$1
-  if test -z "${ESCAPE_SUBST_OPTS+set}"; then
+  if ! defined ESCAPE_SUBST_OPTS; then
     local -r pre=$REMATCH_PREFIX
     declare -ag ESCAPE_SUBST_OPTS
     escape-preprocess ESCAPE_SUBST_OPTS
@@ -241,7 +245,9 @@ rewrite() {
 
 # entry point
 debug() {
-  test "${DEBUG-}" && echo " -> $(concat ARGS)"
+  if defined DEBUG; then
+    echo " -> $(concat ARGS)"
+  fi
 }
 run() {
   while test "${ARGS[0]}"; do
