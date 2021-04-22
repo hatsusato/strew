@@ -95,7 +95,7 @@ parse-rules() {
       local -n match=MATCH_$COUNT subst=SUBST_$COUNT
       match=$prev
       subst=$line
-      declare -r MATCH_$COUNT SUBST_$COUNT
+      declare -rg MATCH_$COUNT SUBST_$COUNT
       ((COUNT+=1))
       prev=
     elif test "$line"; then
@@ -127,18 +127,19 @@ init() {
 }
 
 # matching
-split-tabs() {
-  local str=${!1} arr=() t=$'\t'
-  while test "$str"; do
-    if [[ "$str" == *$t* ]]; then
-      arr+=("${str%%$t*}")
-      str=${str#*$t}
+split() {
+  local src=$1 t=$'\t'
+  local -n dst=$2
+  dst=()
+  while test "$src"; do
+    if [[ "$src" == *$t* ]]; then
+      dst+=("${src%%$t*}")
+      src=${src#*$t}
     else
-      arr+=("$str")
-      str=
+      dst+=("$src")
+      src=
     fi
   done
-  eval "$2=(${arr[@]@Q})"
 }
 escape-match() {
   local -a opts
@@ -160,8 +161,9 @@ pattern-match() {
 scan-match() {
   local i
   for ((i=0; i<COUNT; i++)); do
-    split-tabs MATCH_$i MATCH
-    split-tabs SUBST_$i SUBST
+    local -n match=MATCH_$i subst=SUBST_$i
+    split "$match" MATCH
+    split "$subst" SUBST
     pattern-match && return
   done
   return 1
