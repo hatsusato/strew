@@ -213,15 +213,9 @@ rewrite-prepare-escape() {
     opts+=(-e s"/{D}$i/{rematch_$i[0]}/"g)
   done
 }
-rewrite() {
+rewrite-subst() {
   local -a opts
-  local -n match_=MATCH_$INDEX subst_=SUBST_$INDEX
-  local -i i=0 count=${#match_[@]}
   local subst
-  for ((i=0; i<count; i++)); do
-    local -a rematch_$i
-  done
-  rewrite-rematch
   rewrite-prepare-escape
   UPDATE=()
   for subst in "${subst_[@]}"; do
@@ -229,6 +223,15 @@ rewrite() {
     UPDATE+=("$subst")
   done
   UPDATE+=("${ARGS[@]:count}")
+}
+rewrite() {
+  local -n match_=MATCH_$INDEX subst_=SUBST_$INDEX
+  local -i i=0 count=${#match_[@]}
+  for ((i=0; i<count; i++)); do
+    local -a rematch_$i
+  done
+  rewrite-rematch
+  rewrite-subst
 }
 
 # entry point
