@@ -9,12 +9,12 @@ declare -r B2=$B BB=$B$B BD=$B$D
 concat() {
   local -n var_=$1
   local ifs=$IFS
-  IFS=$'\t'
+  IFS=$DELIM
   echo "${var_[*]}"
   IFS=$ifs
 }
 split() {
-  local src=$1 t=$'\t'
+  local src=$1 t=$DELIM
   local -n dst_=$2
   dst_=()
   while test "$src"; do
@@ -31,9 +31,10 @@ split() {
 # error handling
 usage() {
   cat <<EOF >&2
-USAGE: $0 [-v] <program> [args ...]
+USAGE: $0 [-v] [-d DELIM] PROGRAM [args ...]
 
     -v  debug mode
+    -d  use DELIM instead of TAB for delimiter
 EOF
   exit 1
 }
@@ -162,12 +163,14 @@ parse-rules() {
 }
 init() {
   local msg
-  declare -g DEBUG ARGS
+  declare -g DEBUG DELIM=$'\t'
+  declare -ag ARGS
   (($#)) || usage
   while [[ "${1-}" == -* ]]; do
     msg=$1
     shift
     case "$msg" in
+      -d) DELIM=$1; shift;;
       -h) usage;;
       -v) DEBUG=on;;
       -*) error-option;;
