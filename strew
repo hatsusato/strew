@@ -39,9 +39,15 @@ EOF
 }
 error-option() {
   cat <<EOF >&2
-ERROR: unknown option: $2
+ERROR: unknown option: $msg
 EOF
   usage
+}
+error-file() {
+  cat <<EOF
+ERROR: not found: $msg
+EOF
+  exit 1
 }
 escape() {
   local opts=()
@@ -94,11 +100,21 @@ parse-rules() {
   declare -r COUNT
 }
 init() {
+  local msg
+  declare -g DEBUG ARGS
   (($#)) || usage
-  case "$1" in
-    -v) DEBUG=on; shift;;
-    -*) error-option "$1";;
-  esac
+  while [[ "${1-}" == -* ]]; do
+    msg=$1
+    shift
+    case "$msg" in
+      -h) usage;;
+      -v) DEBUG=on;;
+      -*) error-option;;
+    esac
+  done
+  (($#)) || usage
+  msg=$1
+  test -f "$1" || error-file
   parse-rules <"$1"
   shift
   ARGS=('$' "$@")
