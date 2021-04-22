@@ -33,7 +33,7 @@ EOF
 error-missing() {
   cat <<EOF >&2
 ERROR: missing subst after match:
-$2
+$msg
 EOF
   exit 1
 }
@@ -62,34 +62,33 @@ unescape() {
   eval echo "$tmp"
 }
 read-line() {
-  local line err=0 ifs=$IFS
+  local ifs=$IFS
+  local -i err=0
   IFS=
   read -r line || err=$?
-  echo "$line"
   IFS=$ifs
   return $err
 }
-parse-rule() {
-  local i line msg prev=
-  COUNT=0
+parse-rules() {
+  local line prev= msg
+  declare -ig COUNT=0
+  local -i i
   for ((i=1; ; i++)); do
-    if ! line=$(read-line); then
+    if ! read-line; then
       test "$line" && error-eof
-      test "$prev" && error-missing "$msg"
+      test "$prev" && error-missing
       break
-    fi
-    if ! test "$prev"; then
-      if test "$line"; then
-        prev=$line
-        msg="line:$i: $line"
-      fi
-    else
-      test "$line" || error-missing "$msg"
-      eval MATCH_$COUNT='$prev'
-      eval SUBST_$COUNT='$line'
+    elif test "$prev"; then
+      test "$line" || error-missing
+      local -n match=MATCH_$COUNT subst=SUBST_$COUNT
+      match=$prev
+      subst=$line
       declare -r MATCH_$COUNT SUBST_$COUNT
       ((COUNT+=1))
       prev=
+    elif test "$line"; then
+      prev=$line
+      msg="line:$i: $line"
     fi
   done
   declare -r COUNT
@@ -100,7 +99,7 @@ init() {
     -v) DEBUG=on; shift;;
     -*) error-option "$1";;
   esac
-  parse-rule <"$1"
+  parse-rules <"$1"
   shift
   ARGS=('$' "$@")
 }
