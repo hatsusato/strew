@@ -131,7 +131,6 @@ read-line() {
 }
 parse-rules() {
   declare -ig COUNT=0
-  declare -ag MATCH_RULES SUBST_RULES
   local line prev= msg
   local -i i
   for ((i=1; ; i++)); do
@@ -141,8 +140,6 @@ parse-rules() {
       break
     elif test "$prev"; then
       test "$line" || error missing "$msg"
-      MATCH_RULES[COUNT]=$prev
-      SUBST_RULES[COUNT]=$line
       declare -ag MATCH_$COUNT SUBST_$COUNT
       split "$prev" MATCH_$COUNT
       split "$line" SUBST_$COUNT
@@ -154,7 +151,7 @@ parse-rules() {
       msg="line:$i: $line"
     fi
   done
-  declare -gr COUNT MATCH_RULES SUBST_RULES
+  declare -gr COUNT
 }
 parse-option() {
   declare -g DEBUG DELIM='\t'
