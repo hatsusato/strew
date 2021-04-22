@@ -81,6 +81,20 @@ read-line() {
   IFS=$ifs
   return $err
 }
+split() {
+  local src=$1 t=$'\t'
+  local -n dst=$2
+  dst=()
+  while test "$src"; do
+    if [[ "$src" == *$t* ]]; then
+      dst+=("${src%%$t*}")
+      src=${src#*$t}
+    else
+      dst+=("$src")
+      src=
+    fi
+  done
+}
 parse-rules() {
   declare -ag MATCH_RULES SUBST_RULES
   local line prev= msg
@@ -94,6 +108,10 @@ parse-rules() {
       test "$line" || error-missing
       MATCH_RULES[count]=$prev
       SUBST_RULES[count]=$line
+      declare -ag MATCH_$count SUBST_$count
+      split "$prev" MATCH_$count
+      split "$line" SUBST_$count
+      declare -gr MATCH_$count SUBST_$count
       ((count++)) || :
       prev=
     elif test "$line"; then
@@ -125,20 +143,6 @@ init() {
 }
 
 # matching
-split() {
-  local src=$1 t=$'\t'
-  local -n dst=$2
-  dst=()
-  while test "$src"; do
-    if [[ "$src" == *$t* ]]; then
-      dst+=("${src%%$t*}")
-      src=${src#*$t}
-    else
-      dst+=("$src")
-      src=
-    fi
-  done
-}
 escape-match() {
   local -a opts
   opts+=(-e s'/{B}{B}/{BB}/'g)
@@ -149,7 +153,8 @@ escape-match() {
 pattern-match() {
   local match
   set -- "${ARGS[@]}"
-  for match in "${MATCH[@]}"; do
+  local -n m=MATCH_$INDEX
+  for match in "${m[@]}"; do
     (($#)) || return
     match=$(escape-match <<<"$match")
     [[ "$1" =~ ^$match$ ]] || return
