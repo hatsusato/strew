@@ -4,6 +4,7 @@ set -efu
 
 declare -r LC='{' RC='}' LP='(' RP=')' D='$' B='\' S=' ' Q="'" QQ='"'
 declare -r B2=$B BB=$B$B BD=$B$D
+declare -r REMATCH_PREFIX=rematch_
 
 # utility
 concat() {
@@ -106,14 +107,14 @@ escape-prepare-match() {
 }
 escape-prepare-subst() {
   local -n opts_=$1
-  local var=$2
   if test -z "${ESCAPE_SUBST_OPTS+set}"; then
+    local -r pre=$REMATCH_PREFIX
     declare -ag ESCAPE_SUBST_OPTS
     escape-preprocess ESCAPE_SUBST_OPTS
     ESCAPE_SUBST_OPTS+=(-e s'/{B}{B}/{B2}/'g)
     ESCAPE_SUBST_OPTS+=(-e s"/{B}{D}/{BD}/"g)
-    ESCAPE_SUBST_OPTS+=(-e s"/{D}\([0-9]\)\([0-9]\)/{$var\1[\2]}/"g)
-    ESCAPE_SUBST_OPTS+=(-e s"/{D}\([0-9]\)/{$var\1[0]}/"g)
+    ESCAPE_SUBST_OPTS+=(-e s"/{D}\([0-9]\)\([0-9]\)/{$pre\1[\2]}/"g)
+    ESCAPE_SUBST_OPTS+=(-e s"/{D}\([0-9]\)/{$pre\1[0]}/"g)
     declare -gr ESCAPE_SUBST_OPTS
   fi
   opts_=("${ESCAPE_SUBST_OPTS[@]}")
@@ -216,7 +217,7 @@ rewrite-rematch() {
   for match in "${match_[@]}"; do
     match=$(escape opts <<<"$match")
     [[ "${ARGS[i]}" =~ ^$match$ ]] || :
-    local -n rematch_=rematch_$((i++))
+    local -n rematch_=$REMATCH_PREFIX$((i++))
     rematch_=("${BASH_REMATCH[@]}")
   done
 }
@@ -224,7 +225,7 @@ rewrite-subst() {
   local -n subst_=SUBST_$INDEX
   local -a opts args
   local subst
-  escape-prepare-subst opts rematch_
+  escape-prepare-subst opts
   args=()
   for subst in "${subst_[@]}"; do
     subst=$(escape opts <<<"$subst")
@@ -237,7 +238,7 @@ rewrite() {
   local -n match_=MATCH_$INDEX
   local -i i=0 count=${#match_[@]}
   for ((i=0; i<count; i++)); do
-    local -a rematch_$i
+    local -a $REMATCH_PREFIX$i
   done
   rewrite-rematch
   rewrite-subst
