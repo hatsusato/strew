@@ -4,7 +4,7 @@ set -efu
 
 declare -r LC='{' RC='}' LP='(' RP=')' D='$' B='\' S=' ' Q="'" QQ='"'
 declare -r B2=$B BB=$B$B BD=$B$D
-declare -r REMATCH_PREFIX=rematch_
+declare -r REMATCH_PREFIX=REMATCH_
 
 # utility
 concat() {
@@ -187,18 +187,27 @@ init() {
 }
 
 # matching
+rematch() {
+  declare -ag $1
+  local -n rematch_=$1
+  shift
+  rematch_=("${BASH_REMATCH[@]}")
+}
 pattern-match() {
-  local -a opts
   local -n match_=MATCH_$INDEX
-  local m
+  local -a opts
+  local -i i
+  local match rematch=${1-:}
   set -- "${ARGS[@]}"
   escape-prepare-match opts
-  for m in "${match_[@]}"; do
+  for ((i=0; i<${#match_[@]}; i++)); do
     (($#)) || return
-    m=$(escape opts <<<"$m")
-    [[ "$1" =~ ^$m$ ]] || return
+    match=$(escape opts <<<"${match_[i]}")
+    [[ "$1" =~ ^$match$ ]] || return
     shift
+    $rematch $REMATCH_PREFIX$i
   done
+  declare -ag REST=("$@")
 }
 scan-match() {
   declare -ig INDEX
