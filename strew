@@ -82,9 +82,8 @@ read-line() {
   return $err
 }
 parse-rules() {
-  local line prev= msg
-  declare -ig COUNT=0
   declare -ag MATCH_RULES SUBST_RULES
+  local line prev= msg
   local -i i count=0
   for ((i=1; ; i++)); do
     if ! read-line; then
@@ -93,13 +92,8 @@ parse-rules() {
       break
     elif test "$prev"; then
       test "$line" || error-missing
-      local -n match=MATCH_$COUNT subst=SUBST_$COUNT
-      match=$prev
-      subst=$line
-      declare -rg MATCH_$COUNT SUBST_$COUNT
       MATCH_RULES[count]=$prev
       SUBST_RULES[count]=$line
-      ((COUNT+=1))
       ((count++)) || :
       prev=
     elif test "$line"; then
@@ -107,7 +101,7 @@ parse-rules() {
       msg="line:$i: $line"
     fi
   done
-  declare -r COUNT
+  declare -gr MATCH_RULES SUBST_RULES
 }
 init() {
   local msg
@@ -163,9 +157,8 @@ pattern-match() {
   done
 }
 scan-match() {
-  local -i i
-  for ((i=0; i<COUNT; i++)); do
-    local -n match=MATCH_$i subst=SUBST_$i
+  local -i i count=${#MATCH_RULES[@]}
+  for ((i=0; i<count; i++)); do
     split "${MATCH_RULES[i]}" MATCH
     split "${SUBST_RULES[i]}" SUBST
     pattern-match && return
