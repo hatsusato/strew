@@ -144,7 +144,7 @@ parse-rules() {
       split "$prev" MATCH_$COUNT
       split "$line" SUBST_$COUNT
       declare -gr MATCH_$COUNT SUBST_$COUNT
-      ((COUNT++)) || :
+      COUNT+=1
       prev=
     elif test "$line"; then
       prev=$line
@@ -161,12 +161,13 @@ parse-option() {
     case "$1" in
       -d) ((1 < $#)) || error extra "$1";
           DELIM=$2; j=2;;
+      -d*) set -- -d "${1#-d}" "${@:2}"; i=i-1; j=0;;
       -h) usage;;
       -v) DEBUG=on;;
       -*) error option "$1";;
     esac
     shift $j
-    ((i+=j)) || :
+    i+=j
   done
   DELIM=$(printf "$DELIM")
   (($#)) || usage
