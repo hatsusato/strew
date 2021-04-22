@@ -50,6 +50,18 @@ ERROR: not found: $msg
 EOF
   exit 1
 }
+error-eval() {
+  local -n subst_=SUBST_$INDEX
+  local ifs=$IFS
+  IFS=$'\t'
+  local msg=${subst_[*]}
+  IFS=$ifs
+  cat <<EOF >&2
+ERROR: outbound index in this subst:
+$msg
+EOF
+  exit $1
+}
 
 # escape
 escape-preprocess() {
@@ -95,7 +107,7 @@ escape() {
   local tmp
   local -n opts_=$1
   tmp=$(sed "${opts_[@]}" -e s"/\({[^{}]*}\)/$BD\1/"g)
-  eval echo "$tmp"
+  (eval echo "$tmp") || error-eval $?
 }
 
 # initialization
