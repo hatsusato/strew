@@ -218,39 +218,19 @@ scan-match() {
 }
 
 # rewriting
-rewrite-rematch() {
-  local -n match_=MATCH_$INDEX
-  local -a opts
-  local -i i=0
-  local match
-  escape-prepare-match opts
-  for match in "${match_[@]}"; do
-    match=$(escape opts <<<"$match")
-    [[ "${ARGS[i]}" =~ ^$match$ ]] || :
-    local -n rematch_=$REMATCH_PREFIX$((i++))
-    rematch_=("${BASH_REMATCH[@]}")
-  done
-}
 rewrite-subst() {
   local -n subst_=SUBST_$INDEX
   local -a opts args
   local subst
   escape-prepare-subst opts
-  args=()
   for subst in "${subst_[@]}"; do
     subst=$(escape opts <<<"$subst")
     args+=("$subst")
   done
-  args+=("${ARGS[@]:count}")
-  ARGS=("${args[@]}")
+  ARGS=("${args[@]}" "${REST[@]}")
 }
 rewrite() {
-  local -n match_=MATCH_$INDEX
-  local -i i=0 count=${#match_[@]}
-  for ((i=0; i<count; i++)); do
-    local -a $REMATCH_PREFIX$i
-  done
-  rewrite-rematch
+  pattern-match rematch
   rewrite-subst
 }
 
