@@ -152,13 +152,13 @@ escape-match() {
   escape | sed "${opts[@]}" | unescape
 }
 pattern-match() {
-  local match
+  local -n match=MATCH_$INDEX
+  local m
   set -- "${ARGS[@]}"
-  local -n m=MATCH_$INDEX
-  for match in "${m[@]}"; do
+  for m in "${match[@]}"; do
     (($#)) || return
-    match=$(escape-match <<<"$match")
-    [[ "$1" =~ ^$match$ ]] || return
+    m=$(escape-match <<<"$m")
+    [[ "$1" =~ ^$m$ ]] || return
     shift
   done
 }
