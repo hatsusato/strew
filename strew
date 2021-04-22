@@ -122,10 +122,10 @@ escape() {
 
 # initialization
 read-line() {
-  local ifs=$IFS
   local -i err=0
+  local ifs=$IFS
   IFS=
-  read -r line || err=$?
+  read -r $1 || err=$?
   IFS=$ifs
   return $err
 }
@@ -134,7 +134,7 @@ parse-rules() {
   local line prev= msg
   local -i i
   for ((i=1; ; i++)); do
-    if ! read-line; then
+    if ! read-line line; then
       test "$line" && error eof
       test "$prev" && error missing "$msg"
       break
