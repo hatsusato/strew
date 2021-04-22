@@ -88,19 +88,6 @@ escape-prepare-subst() {
   local -n opts_=$1
   opts_=("${ESCAPE_SUBST_OPTS[@]}")
 }
-escape-init-match() {
-  local -n opts_=$1
-  escape-preprocess $1
-  opts_+=(-e s'/{B}{B}/{BB}/'g)
-  opts_+=(-e s"/{D}/{BD}/"g)
-  opts_+=(-e s"/{B}$D/{BB}/"g)
-}
-escape-init-subst() {
-  local -n opts_=$1
-  escape-preprocess $1
-  opts+=(-e s'/{B}{B}/{B2}/'g)
-  opts+=(-e s"/{B}{D}/{BD}/"g)
-}
 escape() {
   local tmp
   local -n opts_=$1
@@ -161,7 +148,6 @@ parse-rules() {
 init() {
   local msg
   declare -g DEBUG ARGS
-  declare -ag ESCAPE_OPTS_MATCH ESCAPE_OPTS_SUBST
   (($#)) || usage
   while [[ "${1-}" == -* ]]; do
     msg=$1
@@ -178,9 +164,6 @@ init() {
   parse-rules <"$1"
   shift
   ARGS=('$' "$@")
-  escape-init-match ESCAPE_OPTS_MATCH
-  escape-init-subst ESCAPE_OPTS_SUBST
-  declare -gr ESCAPE_OPTS_MATCH ESCAPE_OPTS_SUBST
 }
 
 # matching
