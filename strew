@@ -55,28 +55,34 @@ EOF
 error-missing() {
   cat <<EOF >&2
 ERROR: missing subst after match:
-$msg
+$@
 EOF
   exit 1
 }
 error-option() {
   cat <<EOF >&2
-ERROR: unknown option: $msg
+ERROR: unknown option: $@
 EOF
   usage
 }
 error-file() {
   cat <<EOF
-ERROR: not found: $msg
+ERROR: not found: $@
 EOF
   exit 1
 }
-error-eval() {
-  cat <<EOF >&2
-ERROR: outbound index in this subst:
-$(concat SUBST_$INDEX)
-EOF
-  exit $1
+error() {
+  local -i err=$?
+  local msg='ERROR: ' n=$'\n'
+  ((err)) || err=1
+  case "$1" in
+    eval) msg+='outbound index in this subst:';;
+  esac
+  case "$1" in
+    eval) msg+="$n$(concat SUBST_$INDEX)"
+  esac
+  echo "$msg" >&2
+  exit $err
 }
 
 # escape
@@ -121,10 +127,10 @@ escape-prepare-subst() {
   opts_=("${ESCAPE_SUBST_OPTS[@]}")
 }
 escape() {
-  local tmp
   local -n opts_=$1
+  local tmp
   tmp=$(sed "${opts_[@]}" -e s"/\({[^{}]*}\)/$BD\1/"g)
-  (eval echo "$tmp") || error-eval $?
+  (eval echo "$tmp") || error eval
 }
 
 # initialization
@@ -144,10 +150,10 @@ parse-rules() {
   for ((i=1; ; i++)); do
     if ! read-line; then
       test "$line" && error-eof
-      test "$prev" && error-missing
+      test "$prev" && error-missing "$msg"
       break
     elif test "$prev"; then
-      test "$line" || error-missing
+      test "$line" || error-missing "$msg"
       MATCH_RULES[COUNT]=$prev
       SUBST_RULES[COUNT]=$line
       declare -ag MATCH_$COUNT SUBST_$COUNT
@@ -166,15 +172,13 @@ parse-rules() {
 parse-option() {
   declare -g DEBUG DELIM=$'\t'
   local -i i=0 j=0
-  local msg
   while [[ "${1-}" == -* ]]; do
     j=1
-    msg=$1
     case "$1" in
       -d) DELIM=$2; j=2;;
       -h) usage;;
       -v) DEBUG=on;;
-      -*) error-option;;
+      -*) error-option "$1";;
     esac
     shift $j
     ((i+=j)) || :
@@ -184,8 +188,7 @@ parse-option() {
 }
 init() {
   parse-option "$@" || shift $?
-  local msg=$1
-  test -f "$1" || error-file
+  test -f "$1" || error-file "$1"
   parse-rules <"$1"
   shift
   declare -ag ARGS=('$' "$@")
