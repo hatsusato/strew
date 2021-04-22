@@ -65,6 +65,29 @@ escape-preprocess() {
   opts_+=(-e s"/$Q/{Q}/"g)
   opts_+=(-e s"/$QQ/{QQ}/"g)
 }
+escape-prepare-match() {
+  if test -z "${ESCAPE_MATCH_OPTS+set}"; then
+    declare -ag ESCAPE_MATCH_OPTS
+    escape-preprocess ESCAPE_MATCH_OPTS
+    ESCAPE_MATCH_OPTS+=(-e s'/{B}{B}/{BB}/'g)
+    ESCAPE_MATCH_OPTS+=(-e s"/{D}/{BD}/"g)
+    ESCAPE_MATCH_OPTS+=(-e s"/{B}$D/{BB}/"g)
+    declare -gr ESCAPE_MATCH_OPTS
+  fi
+  local -n opts_=$1
+  opts_=("${ESCAPE_MATCH_OPTS[@]}")
+}
+escape-prepare-subst() {
+  if test -z "${ESCAPE_SUBST_OPTS+set}"; then
+    declare -ag ESCAPE_SUBST_OPTS
+    escape-preprocess ESCAPE_SUBST_OPTS
+    ESCAPE_SUBST_OPTS+=(-e s'/{B}{B}/{B2}/'g)
+    ESCAPE_SUBST_OPTS+=(-e s"/{B}{D}/{BD}/"g)
+    declare -gr ESCAPE_SUBST_OPTS
+  fi
+  local -n opts_=$1
+  opts_=("${ESCAPE_SUBST_OPTS[@]}")
+}
 escape-init-match() {
   local -n opts_=$1
   escape-preprocess $1
@@ -162,12 +185,14 @@ init() {
 
 # matching
 pattern-match() {
+  local -a opts
   local -n match_=MATCH_$INDEX
   local m
   set -- "${ARGS[@]}"
+  escape-prepare-match opts
   for m in "${match_[@]}"; do
     (($#)) || return
-    m=$(escape ESCAPE_OPTS_MATCH <<<"$m")
+    m=$(escape opts <<<"$m")
     [[ "$1" =~ ^$m$ ]] || return
     shift
   done
@@ -182,10 +207,12 @@ scan-match() {
 
 # rewriting
 rewrite-rematch() {
+  local -a opts
   local -i i=0
   local m
+  escape-prepare-match opts
   for m; do
-    m=$(escape ESCAPE_OPTS_MATCH <<<"$m")
+    m=$(escape opts <<<"$m")
     [[ "${ARGS[i]}" =~ ^$m$ ]] || :
     local -n rematch_=rematch_$i
     rematch_=("${BASH_REMATCH[@]}")
@@ -194,6 +221,7 @@ rewrite-rematch() {
 }
 rewrite-prepare-escape() {
   local -i i j
+  escape-prepare-subst opts
   for ((i=0; i<count; i++)); do
     local -n rematch_=rematch_$i
     for ((j=1; j<${#rematch_[@]}; j++)); do
@@ -203,7 +231,7 @@ rewrite-prepare-escape() {
   done
 }
 rewrite() {
-  local -a opts=("${ESCAPE_OPTS_SUBST[@]}")
+  local -a opts
   local match subst
   split "${MATCH_RULES[INDEX]}" MATCH
   split "${SUBST_RULES[INDEX]}" SUBST
