@@ -53,21 +53,22 @@ EOF
 
 # escape
 escape() {
-  local opts=()
+  local -a opts
   opts+=(-e s"/$LC/{LC}/"g)
   opts+=(-e s"/$RC/{RC}/"g)
   opts+=(-e s"/{LC${LC}RC}/{LC}/"g)
   opts+=(-e s"/$LP/{LP}/"g)
   opts+=(-e s"/$RP/{RP}/"g)
-  opts+=(-e s"/$B$D/{D}/"g)
-  opts+=(-e s"/$B$B/{B}/"g)
+  opts+=(-e s"/$BD/{D}/"g)
+  opts+=(-e s"/$BB/{B}/"g)
   opts+=(-e s"/$S/{S}/"g)
   opts+=(-e s"/$Q/{Q}/"g)
   opts+=(-e s"/$QQ/{QQ}/"g)
   sed "${opts[@]}"
 }
 unescape() {
-  local tmp=$(sed -e s"/\({[^{}]*}\)/$BD\1/"g)
+  local tmp
+  tmp=$(sed -e s"/\({[^{}]*}\)/$BD\1/"g)
   eval echo "$tmp"
 }
 
@@ -140,10 +141,10 @@ split-tabs() {
   eval "$2=(${arr[@]@Q})"
 }
 escape-match() {
-  local opts=()
+  local -a opts
   opts+=(-e s'/{B}{B}/{BB}/'g)
   opts+=(-e s"/{D}/{BD}/"g)
-  opts+=(-e s"/{B}$/{BB}/"g)
+  opts+=(-e s"/{B}$D/{BB}/"g)
   escape | sed "${opts[@]}" | unescape
 }
 pattern-match() {
@@ -169,13 +170,13 @@ scan-match() {
 # rewriting
 escape-subst() {
   local -a opts
+  local -i i j
   opts+=(-e s'/{B}{B}/{B2}/'g)
   opts+=(-e s"/{B}{D}/{BD}/"g)
-  local -i i j
   for ((i=0; i<count; i++)); do
     local -n rematch=rematch_$i
     for ((j=1; j<${#rematch[@]}; j++)); do
-      opts+=(-e s"/{D}$i$((j-1))/{rematch_$i[$j]}/"g)
+      opts+=(-e s"/{D}$i$j/{rematch_$i[$j]}/"g)
     done
     opts+=(-e s"/{D}$i/{rematch_$i[0]}/"g)
   done
