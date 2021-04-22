@@ -69,21 +69,18 @@ ERROR: unknown option: $@
 EOF
   usage
 }
-error-file() {
-  cat <<EOF
-ERROR: not found: $@
-EOF
-  exit 1
-}
 error() {
   local -i err=$?
-  local msg='ERROR: ' n=$'\n'
+  local cmd=$1 msg='ERROR: ' n=$'\n'
+  shift
   ((err)) || err=1
-  case "$1" in
+  case $cmd in
     eval) msg+='outbound index in this subst:';;
+    file) msg+='file not found:';;
   esac
-  case "$1" in
-    eval) msg+="$n$(concat SUBST_$INDEX)"
+  case $cmd in
+    eval) msg+="$n$(concat SUBST_$INDEX)";;
+    file) msg+=" $@";;
   esac
   echo "$msg" >&2
   exit $err
@@ -192,7 +189,7 @@ parse-option() {
 }
 init() {
   parse-option "$@" || shift $?
-  test -f "$1" || error-file "$1"
+  test -f "$1" || error file "$1"
   parse-rules <"$1"
   shift
   declare -ag ARGS=('$' "$@")
