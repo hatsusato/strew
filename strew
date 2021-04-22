@@ -192,25 +192,27 @@ rewrite-rematch() {
     ((i++)) || :
   done
 }
+rewrite-prepare-escape() {
+  local -i i j
+  for ((i=0; i<count; i++)); do
+    local -n rematch_=rematch_$i
+    for ((j=1; j<${#rematch_[@]}; j++)); do
+      opts+=(-e s"/{D}$i$j/{rematch_$i[$j]}/"g)
+    done
+    opts+=(-e s"/{D}$i/{rematch_$i[0]}/"g)
+  done
+}
 rewrite() {
   local -a opts=("${ESCAPE_OPTS_SUBST[@]}")
   local match subst
   split "${MATCH_RULES[INDEX]}" MATCH
   split "${SUBST_RULES[INDEX]}" SUBST
-  local -i i=0 j=1 count=${#MATCH[@]}
+  local -i i=0 count=${#MATCH[@]}
   for ((i=0; i<count; i++)); do
     local -a rematch_$i
   done
   rewrite-rematch "${MATCH[@]}"
-  i=0
-  for match in "${MATCH[@]}"; do
-    local -n rematch=rematch_$i
-    for ((j=1; j<${#rematch[@]}; j++)); do
-      opts+=(-e s"/{D}$i$j/{rematch_$i[$j]}/"g)
-    done
-    opts+=(-e s"/{D}$i/{rematch_$i[0]}/"g)
-    ((i++)) || :
-  done
+  rewrite-prepare-escape
   UPDATE=()
   for subst in "${SUBST[@]}"; do
     subst=$(escape opts <<<"$subst")
