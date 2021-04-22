@@ -52,6 +52,7 @@ error() {
   case $cmd in
     eof) msg+='no newline at end of file';;
     eval) msg+='outbound index in this subst';;
+    extra) msg+='missing extra option';;
     file) msg+='file not found';;
     halt) msg+='no transition rule';;
     missing) msg+='missing subst after match';;
@@ -62,7 +63,7 @@ error() {
     eval) msg+="$n$(concat SUBST_$INDEX)";;
     halt) msg+="$n$(concat ARGS)";;
     missing) msg+="$n$@";;
-    file|option) msg+=" $@";;
+    extra|file|option) msg+=" $@";;
   esac
   echo "$msg" >&2
   case $cmd in
@@ -156,12 +157,13 @@ parse-rules() {
   declare -gr COUNT MATCH_RULES SUBST_RULES
 }
 parse-option() {
-  declare -g DEBUG DELIM=$'\t'
+  declare -g DEBUG DELIM='\t'
   local -i i=0 j=0
   while [[ "${1-}" == -* ]]; do
     j=1
     case "$1" in
-      -d) DELIM=$2; j=2;;
+      -d) ((1 < $#)) || error extra "$1";
+          DELIM=$2; j=2;;
       -h) usage;;
       -v) DEBUG=on;;
       -*) error option "$1";;
@@ -169,6 +171,7 @@ parse-option() {
     shift $j
     ((i+=j)) || :
   done
+  DELIM=$(printf "$DELIM")
   (($#)) || usage
   return $i
 }
