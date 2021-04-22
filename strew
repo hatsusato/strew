@@ -96,14 +96,14 @@ read-line() {
 }
 split() {
   local src=$1 t=$'\t'
-  local -n dst=$2
-  dst=()
+  local -n dst_=$2
+  dst_=()
   while test "$src"; do
     if [[ "$src" == *$t* ]]; then
-      dst+=("${src%%$t*}")
+      dst_+=("${src%%$t*}")
       src=${src#*$t}
     else
-      dst+=("$src")
+      dst_+=("$src")
       src=
     fi
   done
@@ -162,10 +162,10 @@ init() {
 
 # matching
 pattern-match() {
-  local -n match=MATCH_$INDEX
+  local -n match_=MATCH_$INDEX
   local m
   set -- "${ARGS[@]}"
-  for m in "${match[@]}"; do
+  for m in "${match_[@]}"; do
     (($#)) || return
     m=$(escape ESCAPE_OPTS_MATCH <<<"$m")
     [[ "$1" =~ ^$m$ ]] || return
