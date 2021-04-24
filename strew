@@ -178,7 +178,7 @@ init() {
   test -f "$1" || error file "$1"
   parse-rules <"$1"
   shift
-  declare -ag ARGS=('$' "$@")
+  declare -ag ARGS=('' "$@")
 }
 
 # matching
@@ -234,10 +234,11 @@ debug() {
 }
 run() {
   init "$@"
-  while test "${ARGS[0]}"; do
-    debug
+  debug
+  while [[ "${ARGS[0]}" != '$' ]]; do
     scan-match || error halt
     rewrite
+    debug
   done
   echo "${ARGS[@]:1}"
 }
