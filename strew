@@ -36,10 +36,10 @@ split() {
 # error handling
 usage() {
   cat <<EOF >&2
-USAGE: $0 [-v] [-d DELIM] PROGRAM [args ...]
+USAGE: $0 [-d DELIM] [-x] PROGRAM [args ...]
 
-    -v  debug mode
     -d  use DELIM instead of TAB for delimiter
+    -x  debug mode
 EOF
   exit 1
 }
@@ -154,7 +154,7 @@ parse-rules() {
   declare -gr COUNT
 }
 parse-option() {
-  declare -g DEBUG DELIM='\t'
+  declare -g DEBUG= DELIM='\t'
   local -i i=0 j=0
   while [[ "${1-}" == -* ]]; do
     j=1
@@ -163,13 +163,14 @@ parse-option() {
           DELIM=$2; j=2;;
       -d*) set -- -d "${1#-d}" "${@:2}"; i=i-1; j=0;;
       -h) usage;;
-      -v) DEBUG=on;;
+      -x) DEBUG=on;;
       -*) error option "$1";;
     esac
     shift $j
     i+=j
   done
   DELIM=$(printf "$DELIM")
+  declare -gr DEBUG DELIM
   (($#)) || usage
   return $i
 }
@@ -198,6 +199,9 @@ pattern-match() {
   for ((i=0; i<${#match_[@]}; i++)); do
     (($#)) || return
     match=$(escape opts <<<"${match_[i]}")
+    if test $DEBUG; then
+      (PS4='DEBUG: '; set -x; [[ "$1" =~ ^$match$ ]]) || :
+    fi
     [[ "$1" =~ ^$match$ ]] || return
     shift
     $rematch $REMATCH_PREFIX$i
@@ -228,8 +232,8 @@ rewrite() {
 
 # entry point
 debug() {
-  if defined DEBUG; then
-    echo " -> $(concat ARGS)"
+  if test $DEBUG; then
+    echo "--> $(concat ARGS)" >&2
   fi
 }
 run() {
