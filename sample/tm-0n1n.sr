@@ -26,10 +26,5 @@ q3	r	y
 q3		_
 q4	r	_
 
-q4
-accept
-
-accept	.*
-accept
-accept
+q4	.*	.*	.*	.*
 $	accept

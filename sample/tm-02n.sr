@@ -33,10 +33,5 @@ q4	l	$2
 q4		_
 q1	r	_
 
-q5
-accept
-
-accept	.*
-accept
-accept
+q5	.*	.*	.*	.*
 $	accept
