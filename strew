@@ -200,23 +200,21 @@ pattern-match() {
   local -n match_=MATCH_$INDEX
   local -a opts
   local -i i
-  local match rematch=$1
-  set -- "${ARGS[@]}"
+  local match arg
   escape-prepare-match opts
-  for ((i=0; i<${#match_[@]}; i++)); do
-    (($#)) || return
+  for ((i=0; i<${#match_[@]} && i<${#ARGS[@]}; i++)); do
     match=$(escape opts <<<"${match_[i]}")
+    arg=${ARGS[i]}
     if test $DEBUG; then
       (PS4='DEBUG: '
        set -x
-       [[ $1 =~ ^$match$ ]]
+       [[ $arg =~ ^$match$ ]]
       ) || :
     fi
-    [[ $1 =~ ^$match$ ]] || return
-    shift
-    $rematch
+    [[ $arg =~ ^$match$ ]] || return
+    $1
   done
-  declare -ag REST=("$@")
+  declare -ag REST=("${ARGS[@]:i}")
 }
 scan-match() {
   declare -ig INDEX
