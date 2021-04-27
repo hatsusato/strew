@@ -182,6 +182,13 @@ init() {
 }
 
 # matching
+init-rematch() {
+  declare -ag REMATCH
+  local -i i
+  for ((i=0; i<100; i++)); do
+    REMATCH[i]=
+  done
+}
 rematch() {
   declare -ag $1
   local -n rematch_=$1
@@ -224,6 +231,7 @@ rewrite() {
   local -a opts update
   local subst
   escape-prepare-subst opts
+  init-rematch
   pattern-match rematch
   for subst in "${subst_[@]}"; do
     subst=$(escape opts <<<"$subst")
