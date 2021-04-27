@@ -5,7 +5,6 @@ set -efu
 declare -r LC='{' RC='}' LP='(' RP=')' B='\' D='$' H='^'
 declare -r S=' ' N=$'\n' T=$'\t' Q="'" QQ='"'
 declare -r B2=$B BB=$B$B BD=$B$D BH=$B$H
-declare -r REMATCH_PREFIX=REMATCH_
 
 # utility
 defined() {
@@ -98,7 +97,7 @@ escape-prepare-subst() {
     escape-preprocess ESCAPE_SUBST_OPTS
     ESCAPE_SUBST_OPTS+=(-e s'/{B}{B}/{B2}/'g)
     ESCAPE_SUBST_OPTS+=(-e s"/{B}{D}/{BD}/"g)
-    ESCAPE_SUBST_OPTS+=(-e s"/{D}\([0-9]\)\([0-9]\)/{REMATCH_\1[\2]}/"g)
+    ESCAPE_SUBST_OPTS+=(-e s"/{D}\([0-9][0-9]\)/{REMATCH[\1]}/"g)
     declare -gr ESCAPE_SUBST_OPTS
   fi
   opts_=("${ESCAPE_SUBST_OPTS[@]}")
@@ -190,16 +189,18 @@ init-rematch() {
   done
 }
 rematch() {
-  declare -ag $1
-  local -n rematch_=$1
-  shift
-  rematch_=("${BASH_REMATCH[@]}")
+  local -i j=i*10
+  local r
+  for r in "${BASH_REMATCH[@]}"; do
+    REMATCH[j]=$r
+    j+=1
+  done
 }
 pattern-match() {
   local -n match_=MATCH_$INDEX
   local -a opts
   local -i i
-  local match rematch=${1-:}
+  local match rematch=$1
   set -- "${ARGS[@]}"
   escape-prepare-match opts
   for ((i=0; i<${#match_[@]}; i++)); do
@@ -213,14 +214,14 @@ pattern-match() {
     fi
     [[ $1 =~ ^$match$ ]] || return
     shift
-    $rematch $REMATCH_PREFIX$i
+    $rematch
   done
   declare -ag REST=("$@")
 }
 scan-match() {
   declare -ig INDEX
   for ((INDEX=0; INDEX<COUNT; INDEX++)); do
-    pattern-match && return
+    pattern-match : && return
   done
   return 1
 }
