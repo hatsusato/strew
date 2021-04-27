@@ -197,7 +197,7 @@ rematch() {
   done
 }
 pattern-match() {
-  local -n match_=MATCH_$INDEX
+  local -n match_=$MATCH
   local -a opts
   local -i i
   local match arg
@@ -217,8 +217,11 @@ pattern-match() {
   declare -ag REST=("${ARGS[@]:i}")
 }
 scan-match() {
-  declare -ig INDEX
-  for ((INDEX=0; INDEX<COUNT; INDEX++)); do
+  declare -g MATCH SUBST
+  local -i i
+  for ((i=0; i<COUNT; i++)); do
+    MATCH=MATCH_$i
+    SUBST=SUBST_$i
     pattern-match : && return
   done
   return 1
@@ -226,7 +229,7 @@ scan-match() {
 
 # rewriting
 rewrite() {
-  local -n subst_=SUBST_$INDEX
+  local -n subst_=$SUBST
   local -a opts update
   local subst
   escape-prepare-subst opts
