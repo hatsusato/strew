@@ -2,7 +2,8 @@
 
 set -efu
 
-declare -r LC='{' RC='}' LP='(' RP=')' D='$' B='\' S=' ' Q="'" QQ='"'
+declare -r LC='{' RC='}' LP='(' RP=')' D='$' B='\'
+declare -r S=' ' N=$'\n' T=$'\t' Q="'" QQ='"'
 declare -r B2=$B BB=$B$B BD=$B$D
 declare -r REMATCH_PREFIX=REMATCH_
 
@@ -23,7 +24,7 @@ split() {
   local -n dst_=$2
   dst_=()
   while test "$src"; do
-    if [[ "$src" == *$t* ]]; then
+    if [[ $src == *$t* ]]; then
       dst_+=("${src%%$t*}")
       src=${src#*$t}
     else
@@ -46,31 +47,21 @@ EOF
 }
 error() {
   local -i err=$?
-  local cmd=$1 msg n=$'\n'
+  local cmd=$1 msg
   shift
   ((err)) || err=1
-  msg='ERROR: '
   case $cmd in
-    eof) msg+='no newline at end of file';;
-    eval) msg+='outbound index in this subst';;
-    extra) msg+='missing extra option';;
-    file) msg+='file not found';;
-    halt) msg+='no transition rule';;
-    missing) msg+='missing subst after match';;
-    option) msg+='unknown option';;
+    eof) msg='no newline at end of file';;
+    eval) msg='outbound index in this subst';;
+    extra) msg='missing extra option';;
+    file) msg='file not found';;
+    halt) msg='no transition rule';;
+    missing) msg='missing subst after match';;
+    option) msg='unknown option';;
   esac
-  msg+=:
-  case $cmd in
-    eval) msg+="$n$(concat SUBST_$INDEX)";;
-    halt) msg+="$n$(concat ARGS)";;
-    missing) msg+="$n$@";;
-    extra|file|option) msg+=" $@";;
-  esac
-  echo "$msg" >&2
-  case $cmd in
-    option) usage;;
-    *) exit $err;;
-  esac
+  echo ERROR: "$msg": "$@" >&2
+  [[ $cmd == option ]] && usage
+  exit $err
 }
 
 # escape
@@ -148,35 +139,38 @@ parse-rules() {
       COUNT+=1
       prev=
     elif test "$line"; then
+      [[ $line == '#'* ]] && continue
       prev=$line
-      msg="line:$i: $line"
+      msg=${N}line:$i:$S$line
     fi
   done
   declare -gr COUNT
 }
 parse-option() {
-  declare -g DEBUG= DELIM='\t' QUIET=
+  declare -g DEBUG= DELIM=$T QUIET=
   local -i i=0 j=0
   local prefix rest
-  while [[ "${1-}" == -* ]]; do
+  while [[ ${1-} == -* ]]; do
     j=1
     case "$1" in
-      -d) ((1 < $#)) || error extra "$1";
-          DELIM=$2; j=2;;
+      -d) ((1 < $#)) || error extra "$1"
+          DELIM=$2
+          j=2;;
       -h) usage;;
       -q) QUIET=on;;
       -x) DEBUG=on;;
       -[dhqx]*)
         prefix=${1:0:2}
         rest=${1:2}
-        [[ "$prefix" == -d ]] || rest=-$rest
-        set -- "$prefix" "$rest" "${@:2}"; i=i-1; j=0;;
+        [[ $prefix == -d ]] || rest=-$rest
+        set -- "$prefix" "$rest" "${@:2}"
+        i+=-1
+        j=0;;
       -*) error option "$1";;
     esac
     shift $j
     i+=j
   done
-  DELIM=$(printf "$DELIM")
   declare -gr DEBUG DELIM QUIET
   (($#)) || usage
   return $i
@@ -207,9 +201,12 @@ pattern-match() {
     (($#)) || return
     match=$(escape opts <<<"${match_[i]}")
     if test $DEBUG; then
-      (PS4='DEBUG: '; set -x; [[ "$1" =~ ^$match$ ]]) || :
+      (PS4='DEBUG: '
+       set -x
+       [[ $1 =~ ^$match$ ]]
+      ) || :
     fi
-    [[ "$1" =~ ^$match$ ]] || return
+    [[ $1 =~ ^$match$ ]] || return
     shift
     $rematch $REMATCH_PREFIX$i
   done
@@ -244,7 +241,7 @@ debug() {
 run() {
   init "$@"
   debug
-  while [[ "${ARGS[0]}" != '$' ]]; do
+  while [[ ${ARGS[0]} != $D ]]; do
     scan-match || error halt
     rewrite
     debug
