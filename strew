@@ -2,9 +2,9 @@
 
 set -efu
 
-declare -r LC='{' RC='}' LP='(' RP=')' D='$' B='\'
+declare -r LC='{' RC='}' LP='(' RP=')' B='\' D='$' H='^'
 declare -r S=' ' N=$'\n' T=$'\t' Q="'" QQ='"'
-declare -r B2=$B BB=$B$B BD=$B$D
+declare -r B2=$B BB=$B$B BD=$B$D BH=$B$H
 declare -r REMATCH_PREFIX=REMATCH_
 
 # utility
@@ -74,6 +74,7 @@ escape-preprocess() {
   opts_+=(-e s"/$RP/{RP}/"g)
   opts_+=(-e s"/$BD/{D}/"g)
   opts_+=(-e s"/$BB/{B}/"g)
+  opts_+=(-e s"/$BH/{H}/"g)
   opts_+=(-e s"/$S/{S}/"g)
   opts_+=(-e s"/$Q/{Q}/"g)
   opts_+=(-e s"/$QQ/{QQ}/"g)
@@ -85,6 +86,7 @@ escape-prepare-match() {
     escape-preprocess ESCAPE_MATCH_OPTS
     ESCAPE_MATCH_OPTS+=(-e s'/{B}{B}/{BB}/'g)
     ESCAPE_MATCH_OPTS+=(-e s"/{D}/{BD}/"g)
+    ESCAPE_MATCH_OPTS+=(-e s'/{H}/{BH}/'g)
     ESCAPE_MATCH_OPTS+=(-e s"/{B}$D/{BB}/"g)
     declare -gr ESCAPE_MATCH_OPTS
   fi
@@ -180,7 +182,7 @@ init() {
   test -f "$1" || error file "$1"
   parse-rules <"$1"
   shift
-  declare -ag ARGS=('' "$@")
+  declare -ag ARGS=('^' "$@")
 }
 
 # matching
