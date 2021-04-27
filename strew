@@ -36,9 +36,10 @@ split() {
 # error handling
 usage() {
   cat <<EOF >&2
-USAGE: $0 [-d DELIM] [-x] PROGRAM [args ...]
+USAGE: $0 [-d DELIM] [-q] [-x] PROGRAM [args ...]
 
     -d  use DELIM instead of TAB for delimiter
+    -q  quiet mode
     -x  debug mode
 EOF
   exit 1
@@ -154,23 +155,29 @@ parse-rules() {
   declare -gr COUNT
 }
 parse-option() {
-  declare -g DEBUG= DELIM='\t'
+  declare -g DEBUG= DELIM='\t' QUIET=
   local -i i=0 j=0
+  local prefix rest
   while [[ "${1-}" == -* ]]; do
     j=1
     case "$1" in
       -d) ((1 < $#)) || error extra "$1";
           DELIM=$2; j=2;;
-      -d*) set -- -d "${1#-d}" "${@:2}"; i=i-1; j=0;;
       -h) usage;;
+      -q) QUIET=on;;
       -x) DEBUG=on;;
+      -[dhqx]*)
+        prefix=${1:0:2}
+        rest=${1:2}
+        [[ "$prefix" == -d ]] || rest=-$rest
+        set -- "$prefix" "$rest" "${@:2}"; i=i-1; j=0;;
       -*) error option "$1";;
     esac
     shift $j
     i+=j
   done
   DELIM=$(printf "$DELIM")
-  declare -gr DEBUG DELIM
+  declare -gr DEBUG DELIM QUIET
   (($#)) || usage
   return $i
 }
@@ -232,9 +239,7 @@ rewrite() {
 
 # entry point
 debug() {
-  if test $DEBUG; then
-    echo "--> $(concat ARGS)" >&2
-  fi
+  test $QUIET || echo "--> $(concat ARGS)" >&2
 }
 run() {
   init "$@"
