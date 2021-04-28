@@ -63,7 +63,7 @@ error() {
 }
 
 # escape
-escape-preprocess() {
+escape-prepare() {
   local -n opts_=$1
   opts_+=(-e s"/$LC/{LC}/"g)
   opts_+=(-e s"/$RC/{RC}/"g)
@@ -72,11 +72,10 @@ escape-preprocess() {
   opts_+=(-e s"/$Q/{Q}/"g)
   opts_+=(-e s"/$QQ/{QQ}/"g)
 }
-escape-prepare-match() {
-  local -n opts_=$1
+escape() {
   if ! defined ESCAPE_MATCH_OPTS; then
     declare -ag ESCAPE_MATCH_OPTS
-    escape-preprocess ESCAPE_MATCH_OPTS
+    escape-prepare ESCAPE_MATCH_OPTS
     ESCAPE_MATCH_OPTS+=(-e s"/{B}{B}/{BB}/"g)
     ESCAPE_MATCH_OPTS+=(-e s"/{B}$D/{BB}/"g)
     ESCAPE_MATCH_OPTS+=(-e s"/$BC/{BC}/"g)
@@ -85,25 +84,18 @@ escape-prepare-match() {
     ESCAPE_MATCH_OPTS+=(-e s"/$RP/{RP}/"g)
     declare -gr ESCAPE_MATCH_OPTS
   fi
-  opts_=("${ESCAPE_MATCH_OPTS[@]}")
-}
-escape-prepare-subst() {
-  local -n opts_=$1
   if ! defined ESCAPE_SUBST_OPTS; then
     declare -ag ESCAPE_SUBST_OPTS
-    escape-preprocess ESCAPE_SUBST_OPTS
+    escape-prepare ESCAPE_SUBST_OPTS
     ESCAPE_SUBST_OPTS+=(-e s"/$BD/{D}/"g)
     ESCAPE_SUBST_OPTS+=(-e s"/{B}{B}/{B2}/"g)
     ESCAPE_SUBST_OPTS+=(-e s"/{B}\([0-9][0-9]\)/{REMATCH[\1]}/"g)
     declare -gr ESCAPE_SUBST_OPTS
   fi
-  opts_=("${ESCAPE_SUBST_OPTS[@]}")
-}
-escape() {
-  local -n opts_=$1
+  local -n opts_=ESCAPE_"$1"_OPTS
   local tmp
   tmp=$(sed "${opts_[@]}" -e s"/\({[^{}]*}\)/$BD\1/"g)
-  eval echo "$tmp"
+  eval echo "$QQ$tmp$QQ"
 }
 
 # initialization
@@ -195,12 +187,10 @@ rematch() {
 }
 pattern-match() {
   local -n match_=$MATCH
-  local -a opts
   local -i i
   local match arg
-  escape-prepare-match opts
   for ((i=0; i<${#match_[@]} && i<${#ARGS[@]}; i++)); do
-    match=$(escape opts <<<"${match_[i]}")
+    match=$(escape MATCH <<<"${match_[i]}")
     arg=${ARGS[i]}
     if test $DEBUG; then
       (PS4='DEBUG: '
@@ -227,13 +217,12 @@ scan-match() {
 # rewriting
 rewrite() {
   local -n subst_=$SUBST
-  local -a opts update
+  local -a update
   local subst
-  escape-prepare-subst opts
   init-rematch
   pattern-match rematch
   for subst in "${subst_[@]}"; do
-    subst=$(escape opts <<<"$subst")
+    subst=$(escape SUBST <<<"$subst")
     update+=("$subst")
   done
   ARGS=("${update[@]}" "${REST[@]}")
