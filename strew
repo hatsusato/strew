@@ -69,8 +69,6 @@ escape-preprocess() {
   opts_+=(-e s"/$RC/{RC}/"g)
   opts_+=(-e s"/{LC${LC}RC}/{LC}/"g)
   opts_+=(-e s"/$BB/{B}/"g)
-  opts_+=(-e s"/$BC/{C}/"g)
-  opts_+=(-e s"/$BD/{D}/"g)
   opts_+=(-e s"/$Q/{Q}/"g)
   opts_+=(-e s"/$QQ/{QQ}/"g)
 }
@@ -81,8 +79,8 @@ escape-prepare-match() {
     escape-preprocess ESCAPE_MATCH_OPTS
     ESCAPE_MATCH_OPTS+=(-e s"/{B}{B}/{BB}/"g)
     ESCAPE_MATCH_OPTS+=(-e s"/{B}$D/{BB}/"g)
-    ESCAPE_MATCH_OPTS+=(-e s"/{C}/{BC}/"g)
-    ESCAPE_MATCH_OPTS+=(-e s"/{D}/{BD}/"g)
+    ESCAPE_MATCH_OPTS+=(-e s"/$BC/{BC}/"g)
+    ESCAPE_MATCH_OPTS+=(-e s"/$BD/{BD}/"g)
     ESCAPE_MATCH_OPTS+=(-e s"/$LP/{LP}/"g)
     ESCAPE_MATCH_OPTS+=(-e s"/$RP/{RP}/"g)
     declare -gr ESCAPE_MATCH_OPTS
@@ -94,9 +92,9 @@ escape-prepare-subst() {
   if ! defined ESCAPE_SUBST_OPTS; then
     declare -ag ESCAPE_SUBST_OPTS
     escape-preprocess ESCAPE_SUBST_OPTS
+    ESCAPE_SUBST_OPTS+=(-e s"/$BD/{D}/"g)
     ESCAPE_SUBST_OPTS+=(-e s"/{B}{B}/{B2}/"g)
-    ESCAPE_SUBST_OPTS+=(-e s"/{B}{D}/{BD}/"g)
-    ESCAPE_SUBST_OPTS+=(-e s"/{D}\([0-9][0-9]\)/{REMATCH[\1]}/"g)
+    ESCAPE_SUBST_OPTS+=(-e s"/{B}\([0-9][0-9]\)/{REMATCH[\1]}/"g)
     declare -gr ESCAPE_SUBST_OPTS
   fi
   opts_=("${ESCAPE_SUBST_OPTS[@]}")
