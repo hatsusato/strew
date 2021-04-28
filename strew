@@ -15,7 +15,7 @@ concat() {
   local -n var_=$1
   local ifs=$IFS
   IFS=$DELIM
-  echo "${var_[*]}"
+  echo "${var_[*]@Q}" | sed -e s"/$Q$BB$Q$Q/$Q/"g
   IFS=$ifs
 }
 split() {
@@ -74,8 +74,9 @@ escape-prepare() {
   opts_+=(-e s"/$QQ/{QQ}/"g)
 }
 escape() {
+  local -n opts_=ESCAPE_"$1"_OPTS
+  local tmp LB='\['
   if ! defined ESCAPE_MATCH_OPTS; then
-    local LB='\['
     declare -ag ESCAPE_MATCH_OPTS
     escape-prepare ESCAPE_MATCH_OPTS
     ESCAPE_MATCH_OPTS+=(-e s"/{B}{B}/{BB}/"g)
@@ -95,8 +96,6 @@ escape() {
     ESCAPE_SUBST_OPTS+=(-e s"/{B}\([0-9][0-9]\)/{REMATCH[\1]}/"g)
     declare -gr ESCAPE_SUBST_OPTS
   fi
-  local -n opts_=ESCAPE_"$1"_OPTS
-  local tmp
   tmp=$(sed "${opts_[@]}" -e s"/\({[^{}]*}\)/$BD\1/"g)
   eval echo "$QQ$tmp$QQ"
 }
@@ -181,14 +180,14 @@ scan-match() {
     SUBST=SUBST_$i
     pattern-match && return
   done
-  return 1
+  error halt
 }
 pattern-match() {
   local -n match_=$MATCH
   local -i i=0
   local match arg
   for match in "${match_[@]}"; do
-    ((i<${#ARGS[@]})) || break
+    ((i<${#ARGS[@]})) || return
     match=$(escape MATCH <<<"$match")
     arg=${ARGS[i++]}
     [[ $arg =~ ^$match$ ]] || return
@@ -241,7 +240,7 @@ run() {
   init "$@"
   debug
   while [[ ${ARGS[0]} != $D ]]; do
-    scan-match || error halt
+    scan-match
     rewrite
     debug
   done
