@@ -172,20 +172,15 @@ init() {
 }
 
 # matching
-init-rematch() {
-  declare -ag REMATCH
+scan-match() {
+  declare -g MATCH SUBST
   local -i i
-  for ((i=0; i<100; i++)); do
-    REMATCH[i]=
+  for ((i=0; i<COUNT; i++)); do
+    MATCH=MATCH_$i
+    SUBST=SUBST_$i
+    pattern-match && return
   done
-}
-rematch() {
-  local -i j=i*10
-  local r
-  for r in "${BASH_REMATCH[@]}"; do
-    REMATCH[j]=$r
-    j+=1
-  done
+  return 1
 }
 pattern-match() {
   local -n match_=$MATCH
@@ -201,19 +196,36 @@ pattern-match() {
       ) || :
     fi
     [[ $arg =~ ^$match$ ]] || return
-    $1
   done
   declare -ag REST=("${ARGS[@]:i}")
 }
-scan-match() {
-  declare -g MATCH SUBST
+rematch() {
+  declare -ag REMATCH
   local -i i
-  for ((i=0; i<COUNT; i++)); do
-    MATCH=MATCH_$i
-    SUBST=SUBST_$i
-    pattern-match : && return
+  for ((i=0; i<100; i++)); do
+    REMATCH[i]=
   done
-  return 1
+  local -n match_=$MATCH
+  local -i i
+  local match arg
+  for ((i=0; i<${#match_[@]} && i<${#ARGS[@]}; i++)); do
+    match=$(escape MATCH <<<"${match_[i]}")
+    arg=${ARGS[i]}
+    if test $DEBUG; then
+      (PS4='DEBUG: '
+       set -x
+       [[ $arg =~ ^$match$ ]]
+      ) || :
+    fi
+    [[ $arg =~ ^$match$ ]] || return
+    local -i j=i*10
+    local r
+    for r in "${BASH_REMATCH[@]}"; do
+      REMATCH[j]=$r
+      j+=1
+    done
+  done
+  declare -ag REST=("${ARGS[@]:i}")
 }
 
 # rewriting
@@ -221,8 +233,7 @@ rewrite() {
   local -n subst_=$SUBST
   local -a update
   local subst
-  init-rematch
-  pattern-match rematch
+  rematch
   for subst in "${subst_[@]}"; do
     subst=$(escape SUBST <<<"$subst")
     update+=("$subst")
