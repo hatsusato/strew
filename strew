@@ -54,6 +54,7 @@ error() {
     extra) msg='missing extra option';;
     file) msg='file not found';;
     halt) msg='no transition rule';;
+    invalid) msg='logically invalid';;
     missing) msg='missing subst after match';;
     option) msg='unknown option';;
   esac
@@ -184,45 +185,36 @@ scan-match() {
 }
 pattern-match() {
   local -n match_=$MATCH
-  local -i i
+  local -i i=0
   local match arg
-  for ((i=0; i<${#match_[@]} && i<${#ARGS[@]}; i++)); do
-    match=$(escape MATCH <<<"${match_[i]}")
-    arg=${ARGS[i]}
-    if test $DEBUG; then
-      (PS4='DEBUG: '
-       set -x
-       [[ $arg =~ ^$match$ ]]
-      ) || :
-    fi
+  for match in "${match_[@]}"; do
+    ((i<${#ARGS[@]})) || break
+    match=$(escape MATCH <<<"$match")
+    arg=${ARGS[i++]}
     [[ $arg =~ ^$match$ ]] || return
   done
-  declare -ag REST=("${ARGS[@]:i}")
 }
 rematch() {
-  declare -ag REMATCH
-  local -i i
-  for ((i=0; i<100; i++)); do
-    REMATCH[i]=
-  done
   local -n match_=$MATCH
-  local -i i
+  declare -ag REMATCH
+  local -i i=0 j=0
   local match arg
-  for ((i=0; i<${#match_[@]} && i<${#ARGS[@]}; i++)); do
-    match=$(escape MATCH <<<"${match_[i]}")
+  for ((j=0; j<100; j++)); do
+    REMATCH[j]=
+  done
+  for match in "${match_[@]}"; do
+    ((i<${#ARGS[@]})) || break
+    match=$(escape MATCH <<<"$match")
     arg=${ARGS[i]}
+    [[ $arg =~ ^$match$ ]] || error invalid
     if test $DEBUG; then
-      (PS4='DEBUG: '
+      (PS4=' DEBUG: '
        set -x
-       [[ $arg =~ ^$match$ ]]
-      ) || :
+       [[ $arg =~ ^$match$ ]])
     fi
-    [[ $arg =~ ^$match$ ]] || return
-    local -i j=i*10
-    local r
-    for r in "${BASH_REMATCH[@]}"; do
-      REMATCH[j]=$r
-      j+=1
+    j=(i++)*10
+    for match in "${BASH_REMATCH[@]}"; do
+      REMATCH[j++]=$match
     done
   done
   declare -ag REST=("${ARGS[@]:i}")
@@ -243,7 +235,7 @@ rewrite() {
 
 # entry point
 debug() {
-  test $QUIET || echo "--> $(concat ARGS)" >&2
+  test $QUIET || echo "--->$T$(concat ARGS)" >&2
 }
 run() {
   init "$@"
