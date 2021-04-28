@@ -51,7 +51,6 @@ error() {
   ((err)) || err=1
   case $cmd in
     eof) msg='no newline at end of file';;
-    eval) msg='outbound index in this subst';;
     extra) msg='missing extra option';;
     file) msg='file not found';;
     halt) msg='no transition rule';;
@@ -106,7 +105,7 @@ escape() {
   local -n opts_=$1
   local tmp
   tmp=$(sed "${opts_[@]}" -e s"/\({[^{}]*}\)/$BD\1/"g)
-  (eval echo "$tmp") || error eval
+  eval echo "$tmp"
 }
 
 # initialization
