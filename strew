@@ -74,6 +74,7 @@ escape-prepare() {
 }
 escape() {
   if ! defined ESCAPE_MATCH_OPTS; then
+    local LB='\['
     declare -ag ESCAPE_MATCH_OPTS
     escape-prepare ESCAPE_MATCH_OPTS
     ESCAPE_MATCH_OPTS+=(-e s"/{B}{B}/{BB}/"g)
@@ -82,6 +83,7 @@ escape() {
     ESCAPE_MATCH_OPTS+=(-e s"/$BD/{BD}/"g)
     ESCAPE_MATCH_OPTS+=(-e s"/$LP/{LP}/"g)
     ESCAPE_MATCH_OPTS+=(-e s"/$RP/{RP}/"g)
+    ESCAPE_MATCH_OPTS+=(-e s"/$LB{BC}/$LB{C}/"g)
     declare -gr ESCAPE_MATCH_OPTS
   fi
   if ! defined ESCAPE_SUBST_OPTS; then
