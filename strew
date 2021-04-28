@@ -194,14 +194,12 @@ pattern-match() {
     [[ $arg =~ ^$match$ ]] || return
   done
 }
+
+# rewriting
 rematch() {
   local -n match_=$MATCH
-  declare -ag REMATCH
   local -i i=0 j=0
   local match arg
-  for ((j=0; j<100; j++)); do
-    REMATCH[j]=
-  done
   for match in "${match_[@]}"; do
     ((i<${#ARGS[@]})) || break
     match=$(escape MATCH <<<"$match")
@@ -217,20 +215,22 @@ rematch() {
       REMATCH[j++]=$match
     done
   done
-  declare -ag REST=("${ARGS[@]:i}")
+  rest=("${ARGS[@]:i}")
 }
-
-# rewriting
 rewrite() {
   local -n subst_=$SUBST
-  local -a update
+  local -a rest REMATCH
   local subst
+  for ((j=0; j<100; j++)); do
+    REMATCH[j]=
+  done
   rematch
+  ARGS=()
   for subst in "${subst_[@]}"; do
     subst=$(escape SUBST <<<"$subst")
-    update+=("$subst")
+    ARGS+=("$subst")
   done
-  ARGS=("${update[@]}" "${REST[@]}")
+  ARGS+=("${rest[@]}")
 }
 
 # entry point
