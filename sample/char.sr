@@ -1,0 +1,80 @@
+^	\a
+$	bell
+^	\b
+$	backspace
+^	\t
+$	horizontal tab
+^	\n
+$	newline
+^	\v
+$	vertical tab
+^	\f
+$	form feed
+^	\r
+$	carriage ret
+^	 
+$	space
+^	!
+$	exclamation mark
+^	"
+$	quotation mark
+^	#
+$	number sign
+^	$
+$	dollar sign
+^	%
+$	percent sign
+^	&
+$	ampersand
+^	'
+$	apostrophe
+^	\(
+$	left parenthesis
+^	\)
+$	right parenthesis
+^	\*
+$	asterisk
+^	\+
+$	plus sign
+^	,
+$	comma
+^	-
+$	hyphen minus
+^	\.
+$	full stop
+^	/
+$	slash
+^	:
+$	colon
+^	;
+$	semicolon
+^	<
+$	less-than sign
+^	=
+$	equals sign
+^	>
+$	greater-than sign
+^	\?
+$	question mark
+^	@
+$	at sign
+^	\[
+$	left square bracket
+^	\
+$	backslash
+^	\]
+$	right square bracket
+^	^
+$	caret
+^	_
+$	underscore
+^	`
+$	grave accent
+^	{
+$	left curly bracket
+^	\|
+$	vertical bar
+^	}
+$	right curly bracket
+^	~
+$	tilde
