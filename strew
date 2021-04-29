@@ -84,7 +84,6 @@ escape-prepare-match() {
   opts_+=(-e s"/$BD/{BD}/"g)
   opts_+=(-e s"/$LP/{LP}/"g)
   opts_+=(-e s"/$RP/{RP}/"g)
-  opts_+=(-e s"/\({L[CR]}\)/{B}\1/"g)
   opts_+=(-e s"/$LB{BC}/$LB{C}/"g)
   declare -gr $var
 }

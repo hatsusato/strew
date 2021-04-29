@@ -60,7 +60,7 @@ $	question mark
 $	at sign
 ^	\[
 $	left square bracket
-^	\
+^	\\
 $	backslash
 ^	\]
 $	right square bracket
@@ -70,11 +70,11 @@ $	caret
 $	underscore
 ^	`
 $	grave accent
-^	{
+^	\{
 $	left curly bracket
 ^	\|
 $	vertical bar
-^	}
+^	\}
 $	right curly bracket
 ^	~
 $	tilde
