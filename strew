@@ -73,32 +73,38 @@ escape-prepare() {
   opts_+=(-e s"/$QQ/{QQ}/"g)
   opts_+=(-e s"/{B}\([abtnvfr]\)/{BB}\1/"g)
 }
+escape-prepare-match() {
+  local -r var=ESCAPE_MATCH_OPTS LB='\['
+  local -n opts_=$var
+  declare -ag $var
+  escape-prepare $var
+  opts_+=(-e s"/{B}{B}/{BB}/"g)
+  opts_+=(-e s"/{B}$D/{BB}/"g)
+  opts_+=(-e s"/$BC/{BC}/"g)
+  opts_+=(-e s"/$BD/{BD}/"g)
+  opts_+=(-e s"/$LP/{LP}/"g)
+  opts_+=(-e s"/$RP/{RP}/"g)
+  opts_+=(-e s"/\({L[CR]}\)/{B}\1/"g)
+  opts_+=(-e s"/$LB{BC}/$LB{C}/"g)
+  declare -gr $var
+}
+escape-prepare-subst() {
+  local -r var=ESCAPE_SUBST_OPTS
+  local -n opts_=$var
+  declare -ag $var
+  escape-prepare $var
+  opts_+=(-e s"/$BD/{D}/"g)
+  opts_+=(-e s"/{B}{B}/{B2}/"g)
+  opts_+=(-e s"/{B}\([0-9][0-9]\)/{REMATCH[\1]}/"g)
+  declare -gr $var
+}
 escape() {
-  local -n opts_=ESCAPE_"$1"_OPTS
-  local tmp LB='\['
-  if ! defined ESCAPE_MATCH_OPTS; then
-    declare -ag ESCAPE_MATCH_OPTS
-    escape-prepare ESCAPE_MATCH_OPTS
-    ESCAPE_MATCH_OPTS+=(-e s"/{B}{B}/{BB}/"g)
-    ESCAPE_MATCH_OPTS+=(-e s"/{B}$D/{BB}/"g)
-    ESCAPE_MATCH_OPTS+=(-e s"/$BC/{BC}/"g)
-    ESCAPE_MATCH_OPTS+=(-e s"/$BD/{BD}/"g)
-    ESCAPE_MATCH_OPTS+=(-e s"/$LP/{LP}/"g)
-    ESCAPE_MATCH_OPTS+=(-e s"/$RP/{RP}/"g)
-    ESCAPE_MATCH_OPTS+=(-e s"/\({L[CR]}\)/{B}\1/"g)
-    ESCAPE_MATCH_OPTS+=(-e s"/$LB{BC}/$LB{C}/"g)
-    declare -gr ESCAPE_MATCH_OPTS
-  fi
-  if ! defined ESCAPE_SUBST_OPTS; then
-    declare -ag ESCAPE_SUBST_OPTS
-    escape-prepare ESCAPE_SUBST_OPTS
-    ESCAPE_SUBST_OPTS+=(-e s"/$BD/{D}/"g)
-    ESCAPE_SUBST_OPTS+=(-e s"/{B}{B}/{B2}/"g)
-    ESCAPE_SUBST_OPTS+=(-e s"/{B}\([0-9][0-9]\)/{REMATCH[\1]}/"g)
-    declare -gr ESCAPE_SUBST_OPTS
-  fi
-  tmp=$(sed "${opts_[@]}" -e s"/\({[^{}]*}\)/$BD\1/"g)
-  eval echo "$QQ$tmp$QQ"
+  local var=ESCAPE_"$1"_OPTS
+  local -n opts_=$var
+  defined ESCAPE_MATCH_OPTS || escape-prepare-match
+  defined ESCAPE_SUBST_OPTS || escape-prepare-subst
+  var=$(sed "${opts_[@]}" -e s"/\({[^{}]*}\)/$BD\1/"g)
+  eval echo "$QQ$var$QQ"
 }
 
 # initialization
