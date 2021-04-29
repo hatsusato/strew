@@ -3,7 +3,7 @@
 set -efu
 
 declare -r LC='{' RC='}' LP='(' RP=')' B='\' C='^' D='$'
-declare -r S=' ' N=$'\n' T=$'\t' Q="'" QQ='"'
+declare -r S=' ' N=$'\n' T=$'\t' G='`' Q="'" QQ='"'
 declare -r B2=$B BB=$B$B BC=$B$C BD=$B$D
 
 # utility
@@ -68,6 +68,7 @@ escape-prepare() {
   opts_+=(-e s"/$RC/{RC}/"g)
   opts_+=(-e s"/{LC${LC}RC}/{LC}/"g)
   opts_+=(-e s"/$BB/{B}/"g)
+  opts_+=(-e s"/$G/{G}/"g)
   opts_+=(-e s"/$Q/{Q}/"g)
   opts_+=(-e s"/$QQ/{QQ}/"g)
 }
@@ -83,6 +84,7 @@ escape() {
     ESCAPE_MATCH_OPTS+=(-e s"/$BD/{BD}/"g)
     ESCAPE_MATCH_OPTS+=(-e s"/$LP/{LP}/"g)
     ESCAPE_MATCH_OPTS+=(-e s"/$RP/{RP}/"g)
+    ESCAPE_MATCH_OPTS+=(-e s"/\({L[CR]}\)/{B}\1/"g)
     ESCAPE_MATCH_OPTS+=(-e s"/$LB{BC}/$LB{C}/"g)
     declare -gr ESCAPE_MATCH_OPTS
   fi
