@@ -67,17 +67,6 @@ assert '|' EXPECTS vertical bar
 assert '}' EXPECTS right curly bracket
 assert '~' EXPECTS tilde
 
-PROGRAM=tm-0n1n.sr
-for i in 0 00 000 0000; do
-  i+=${i//0/1}
-  assert $i EXPECTS accept
-done
-
-PROGRAM=tm-02n.sr
-for i in 0 00 0000 00000000; do
-  assert $i EXPECTS accept
-done
-
 PROGRAM=fizzbuzz.sr
 for i in $(seq 30); do
   if ((i%15==0)); then
@@ -89,6 +78,17 @@ for i in $(seq 30); do
   else
     assert $i EXPECTS $i
   fi
+done
+
+PROGRAM=tm-0n1n.sr
+for i in 0 00 000 0000; do
+  i+=${i//0/1}
+  assert $i EXPECTS accept
+done
+
+PROGRAM=tm-02n.sr
+for i in 0 00 0000 00000000; do
+  assert $i EXPECTS accept
 done
 
 if ((ERROR)); then
