@@ -36,9 +36,10 @@ split() {
 # error handling
 usage() {
   cat <<EOF >&2
-USAGE: $0 [-d DELIM] [-q] [-x] PROGRAM [args ...]
+USAGE: $0 [-d DELIM] [-h] [-q] [-x] PROGRAM [ARGS ...]
 
     -d  use DELIM instead of TAB for delimiter
+    -h  print this help
     -q  quiet mode
     -x  debug mode
 EOF
@@ -51,15 +52,12 @@ error() {
   ((err)) || err=1
   case $cmd in
     eof) msg='no newline at end of file';;
-    extra) msg='missing extra option';;
     file) msg='file not found';;
     halt) msg='no transition rule';;
     invalid) msg='logically invalid';;
     missing) msg='missing subst after match';;
-    option) msg='unknown option';;
   esac
   echo ERROR: "$msg": "$@" >&2
-  [[ $cmd == option ]] && usage
   exit $err
 }
 
@@ -136,35 +134,21 @@ parse-rules() {
 }
 parse-option() {
   declare -g DEBUG= DELIM=$T QUIET=
-  local -i i=0 j=0
-  local prefix rest
-  while [[ ${1-} == -* ]]; do
-    j=1
-    case "$1" in
-      -d) ((1 < $#)) || error extra "$1"
-          DELIM=$2
-          j=2;;
-      -h) usage;;
-      -q) QUIET=on;;
-      -x) DEBUG=on;;
-      -[dhqx]*)
-        prefix=${1:0:2}
-        rest=${1:2}
-        [[ $prefix == -d ]] || rest=-$rest
-        set -- "$prefix" "$rest" "${@:2}"
-        i+=-1
-        j=0;;
-      -*) error option "$1";;
+  local arg
+  while getopts d:hqx arg; do
+    case $arg in
+      d) DELIM=$OPTARG;;
+      q) QUIET=on;;
+      x) DEBUG=on;;
+      [h?]) usage;;
     esac
-    shift $j
-    i+=j
   done
   declare -gr DEBUG DELIM QUIET
-  (($#)) || usage
-  return $i
+  return $((OPTIND-1))
 }
 init() {
   parse-option "$@" || shift $?
+  (($#)) || usage
   test -f "$1" || error file "$1"
   parse-rules <"$1"
   shift
