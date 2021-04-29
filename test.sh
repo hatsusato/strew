@@ -13,12 +13,12 @@ assert() {
   result=("${@:i+1}")
   ret=$(./strew -q "$f" "${args[@]}" 2>/dev/null)
   if [[ "$ret" == "${result[*]}" ]]; then
-    echo OK: "$PROGRAM" "$@"
+    echo OK: "$PROGRAM" "${args[@]@Q}" EXPECTS "${ret[@]@Q}"
   else
     cat <<EOF
 NG: $PROGRAM ${args[@]@Q}
     EXPECTS: ${result[@]@Q}
-    OUTPUTS: ${ret[@]@Q}
+    OUTPUTS: ${ret@Q}
 EOF
     ERROR+=1
   fi

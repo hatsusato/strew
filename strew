@@ -71,6 +71,7 @@ escape-prepare() {
   opts_+=(-e s"/$G/{G}/"g)
   opts_+=(-e s"/$Q/{Q}/"g)
   opts_+=(-e s"/$QQ/{QQ}/"g)
+  opts_+=(-e s"/{B}\([abtnvfr]\)/{BB}\1/"g)
 }
 escape() {
   local -n opts_=ESCAPE_"$1"_OPTS
@@ -149,12 +150,26 @@ parse-option() {
   return $((OPTIND-1))
 }
 init() {
+  local a
   parse-option "$@" || shift $?
   (($#)) || usage
   test -f "$1" || error file "$1"
   parse-rules <"$1"
   shift
-  declare -ag ARGS=("$C" "$@")
+  declare -ag ARGS=("$C")
+  for a; do
+    case $a in
+      $'\a') a='\a';;
+      $'\b') a='\b';;
+      $'\t') a='\t';;
+      $'\n') a='\n';;
+      $'\v') a='\v';;
+      $'\f') a='\f';;
+      $'\r') a='\r';;
+      '\'[abtnvfr]) a=$B$a;;
+    esac
+    ARGS+=("$a")
+  done
 }
 
 # matching
@@ -230,7 +245,7 @@ run() {
     rewrite
     debug
   done
-  echo "${ARGS[@]:1}"
+  echo -e "${ARGS[@]:1}"
 }
 
 run "$@"
