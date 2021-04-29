@@ -36,6 +36,19 @@ for i in 0 00 0000 00000000; do
   assert $i EXPECTS accept
 done
 
+PROGRAM=fizzbuzz.sr
+for i in $(seq 30); do
+  if ((i%15==0)); then
+    assert $i EXPECTS FizzBuzz
+  elif ((i%3==0)); then
+    assert $i EXPECTS Fizz
+  elif ((i%5==0)); then
+    assert $i EXPECTS Buzz
+  else
+    assert $i EXPECTS $i
+  fi
+done
+
 if ((ERROR)); then
   echo "$ERROR errors found"
   exit 1
